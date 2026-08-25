@@ -8,6 +8,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Tanmay OS",
   description: "Personal operating system for Tanmay",
+  applicationName: "Tanmay OS",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 };
 

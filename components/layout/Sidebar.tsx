@@ -1,48 +1,90 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brain, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isNavLink, mobileTabs, navigation } from "@/lib/navigation";
+import { mobileTabs, systemNavBottom, systemNavTop } from "@/lib/navigation";
+import { spaceIcon } from "@/lib/space-icons";
+import type { SpaceCore } from "@/lib/spaces";
 
-function Nav({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinkItem({
+  href,
+  name,
+  icon: Icon,
+  onNavigate,
+}: {
+  href: string;
+  name: string;
+  icon: ComponentType<{ className?: string }>;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
 
   return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className={cn(
+        "group flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
+        isActive
+          ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]"
+          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+      )}
+    >
+      <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
+      {name}
+    </Link>
+  );
+}
+
+function Nav({ cores, onNavigate }: { cores: SpaceCore[]; onNavigate?: () => void }) {
+  return (
     <nav className="space-y-0.5 px-2">
-      {navigation.map((item, index) => {
-        if (!isNavLink(item)) {
+      {systemNavTop.map((item) => (
+        <NavLinkItem key={item.href} {...item} onNavigate={onNavigate} />
+      ))}
+
+      {cores
+        .filter((core) => !core.hidden)
+        .sort((a, b) => a.order - b.order)
+        .map((core) => {
+          const visibleItems = core.items.filter((i) => !i.hidden).sort((a, b) => a.order - b.order);
+          if (visibleItems.length === 0) return null;
           return (
-            <div key={`div-${index}`} className="pt-5 pb-1.5">
-              <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
-                {item.name}
-              </p>
+            <div key={core.id}>
+              <div className="pt-5 pb-1.5">
+                <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
+                  {core.name}
+                </p>
+              </div>
+              {visibleItems.map((item) => {
+                const Icon = spaceIcon(item.icon);
+                return (
+                  <NavLinkItem
+                    key={item.id}
+                    href={item.href}
+                    name={item.name}
+                    icon={Icon}
+                    onNavigate={onNavigate}
+                  />
+                );
+              })}
             </div>
           );
-        }
+        })}
 
-        const isActive = pathname === item.href;
-        const Icon = item.icon;
-
-        return (
-          <Link
-            key={item.name}
-            href={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "group flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
-              isActive
-                ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]"
-                : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-            )}
-          >
-            <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
-            {item.name}
-          </Link>
-        );
-      })}
+      <div className="pt-5 pb-1.5">
+        <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
+          System
+        </p>
+      </div>
+      {systemNavBottom.map((item) => (
+        <NavLinkItem key={item.href} {...item} onNavigate={onNavigate} />
+      ))}
     </nav>
   );
 }
@@ -52,7 +94,7 @@ function isTabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
+export function Sidebar({ cores }: { cores: SpaceCore[] }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const tabActive = mobileTabs.some((t) => isTabActive(pathname, t.href));
@@ -102,7 +144,7 @@ export function Sidebar() {
               </button>
             </div>
             <div className="overflow-y-auto px-1 pb-4" style={{ maxHeight: "calc(88dvh - 4.5rem)" }}>
-              <Nav onNavigate={() => setMoreOpen(false)} />
+              <Nav cores={cores} onNavigate={() => setMoreOpen(false)} />
             </div>
           </aside>
         </div>
@@ -155,7 +197,7 @@ export function Sidebar() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
-          <Nav />
+          <Nav cores={cores} />
         </div>
       </aside>
     </>

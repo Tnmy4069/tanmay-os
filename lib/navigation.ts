@@ -26,10 +26,20 @@ export type NavLink = {
 
 export type NavEntry = NavLink | { name: string; divider: true };
 
-export const navigation: NavEntry[] = [
+export const systemNavTop: NavLink[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Today", href: "/today", icon: CalendarDays },
   { name: "Tasks", href: "/tasks", icon: CheckSquare },
+];
+
+export const systemNavBottom: NavLink[] = [
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Routine", href: "/settings/routine", icon: CalendarRange },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
+
+export const navigation: NavEntry[] = [
+  ...systemNavTop,
   { name: "Career", divider: true },
   { name: "Job Hunt", href: "/career/jobs", icon: Briefcase },
   { name: "DSA", href: "/career/dsa", icon: Code2 },
@@ -45,9 +55,7 @@ export const navigation: NavEntry[] = [
   { name: "Personal Life", href: "/personal/life", icon: Heart },
   { name: "Checklist", href: "/personal/checklist", icon: CalendarCheck2 },
   { name: "System", divider: true },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Routine", href: "/settings/routine", icon: CalendarRange },
-  { name: "Settings", href: "/settings", icon: Settings },
+  ...systemNavBottom,
 ];
 
 export const mobileTabs: NavLink[] = [

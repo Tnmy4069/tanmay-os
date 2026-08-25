@@ -110,6 +110,7 @@ export function TodayView({
   });
   const [isPending, startTransition] = useTransition();
   const currentRef = useRef<HTMLDivElement | null>(null);
+  const desktopCurrentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -143,7 +144,9 @@ export function TodayView({
   }, [blocks, minutes]);
 
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    const wide = window.matchMedia("(min-width: 1024px)").matches;
+    const el = wide ? desktopCurrentRef.current : currentRef.current;
+    el?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
   }, [currentIdx]);
 
   const workingBlocks = blocks.filter((b) => isWorking(b.type));
@@ -179,21 +182,22 @@ export function TodayView({
 
   return (
     <div className="app-page max-w-7xl">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Good focus, {userName}</p>
-          <h1 className="text-xl sm:text-3xl font-semibold tracking-tight">Today</h1>
-          <p className="text-sm text-muted-foreground mt-1">{dateLabel} · {clock} IST</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">
+            {userName} · {dateLabel} · {clock}
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Today</h1>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-          <Button variant="outline" asChild className="w-full sm:w-auto">
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
             <Link href="/personal/checklist">Checklist</Link>
           </Button>
           <TaskModal
             trigger={
-              <Button className="w-full sm:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Task
+              <Button size="sm">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Task</span>
               </Button>
             }
           />
@@ -201,20 +205,20 @@ export function TodayView({
       </div>
 
       {workload.isOverloaded && (
-        <div className="bg-destructive/10 border border-destructive/40 text-destructive px-4 py-3 rounded-xl flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+        <div className="bg-destructive/10 border border-destructive/40 text-destructive px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl flex items-start gap-2.5">
+          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="font-semibold">Over capacity</h3>
-            <p className="text-sm mt-0.5">
-              {durationLabel(workload.plannedMinutes)} of tasks vs {durationLabel(workload.availableMinutes)} of Work/Focus time. Move something out.
+            <h3 className="font-semibold text-sm">Over capacity</h3>
+            <p className="text-xs sm:text-sm mt-0.5">
+              {durationLabel(workload.plannedMinutes)} of tasks vs {durationLabel(workload.availableMinutes)} of Work/Focus time.
             </p>
           </div>
         </div>
       )}
 
       {overdueTasks.length > 0 && (
-        <div className="bg-orange-500/10 border border-orange-500/30 px-4 py-3 rounded-xl">
-          <h3 className="font-semibold text-orange-500 mb-2">{overdueTasks.length} overdue</h3>
+        <div className="bg-orange-500/10 border border-orange-500/30 px-3 py-3 sm:px-4 rounded-2xl">
+          <h3 className="font-semibold text-orange-500 mb-2 text-sm">{overdueTasks.length} overdue</h3>
           <ul className="space-y-2">
             {overdueTasks.slice(0, 4).map((task) => (
               <TaskItem key={String(task._id)} task={task} />
@@ -223,14 +227,16 @@ export function TodayView({
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs uppercase tracking-wide text-primary">Now</CardTitle>
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-primary">Now</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <p className="font-semibold truncate">{current ? current.title : "Free / between blocks"}</p>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <p className="text-sm sm:text-base font-semibold leading-tight line-clamp-2">
+              {current ? current.title : "Free / between"}
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 tabular-nums">
               {current ? `${current.startTime}–${current.endTime} · ${durationLabel(remaining)} left` : "No active slot"}
             </p>
             {current && (
@@ -241,46 +247,74 @@ export function TodayView({
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs uppercase tracking-wide text-muted-foreground">Next</CardTitle>
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Next</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <p className="font-semibold truncate">{next ? next.title : "End of day"}</p>
-            <p className="text-xs text-muted-foreground mt-1">{next ? `${next.startTime}–${next.endTime}` : "—"}</p>
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <p className="text-sm sm:text-base font-semibold leading-tight line-clamp-2">{next ? next.title : "End of day"}</p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 tabular-nums">
+              {next ? `${next.startTime}–${next.endTime}` : "—"}
+            </p>
           </CardContent>
         </Card>
         <Card className={capacityPct > 100 ? "border-destructive/40" : ""}>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs uppercase tracking-wide text-muted-foreground">Capacity</CardTitle>
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Capacity</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <p className="font-semibold">{capacityPct}%</p>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <p className="text-xl sm:text-2xl font-semibold tabular-nums">{capacityPct}%</p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
               {durationLabel(workload.plannedMinutes)} / {durationLabel(workload.availableMinutes)}
             </p>
           </CardContent>
         </Card>
         <Card className="bg-orange-500/5 border-orange-500/20">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs uppercase tracking-wide text-orange-500 flex items-center gap-1">
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-orange-500 flex items-center gap-1">
               <Flame className="w-3.5 h-3.5" /> Notes
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <p className="font-semibold">{loggedCount}/{workingBlocks.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">Working slots logged</p>
+          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+            <p className="text-xl sm:text-2xl font-semibold tabular-nums">
+              {loggedCount}/{workingBlocks.length}
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">Slots logged</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 space-y-6">
+      {blocks.length > 0 && (
+        <div className="-mx-4 px-4 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] lg:hidden">
+          {blocks.map((block) => {
+            const isActive = current?._id === block._id;
+            return (
+              <div
+                key={`m-${block._id}`}
+                ref={isActive ? currentRef : undefined}
+                className={`min-w-[42%] snap-start rounded-2xl border px-3 py-2.5 ${
+                  isActive ? "border-primary/40 bg-primary/10" : "border-white/5 bg-white/[0.02] opacity-70"
+                }`}
+              >
+                <p className="text-[11px] tabular-nums text-muted-foreground">
+                  {block.startTime} · {block.type}
+                </p>
+                <p className={`text-sm leading-snug line-clamp-2 ${isActive ? "font-semibold text-primary" : "font-medium"}`}>
+                  {block.title}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
           {current && isWorking(current.type) && (
             <Card className="border-indigo-500/30 bg-indigo-500/5">
-              <CardHeader>
-                <CardTitle className="text-lg">Log this slot</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Log this slot</CardTitle>
                 <CardDescription>
-                  {current.title} · {current.startTime}–{current.endTime}. Write what you are doing now — this feeds your streak.
+                  {current.title} · {current.startTime}–{current.endTime}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -289,9 +323,9 @@ export function TodayView({
                   onChange={(e) => setLogs((prev) => ({ ...prev, [current._id]: e.target.value }))}
                   placeholder="Kya kiya / kya kar rahe ho is block me?"
                   rows={3}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-base sm:text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
-                <Button onClick={saveNotes} disabled={isPending} size="sm">
+                <Button onClick={saveNotes} disabled={isPending} className="w-full sm:w-auto">
                   <Save className="w-4 h-4 mr-2" />
                   Save notes
                 </Button>
@@ -310,12 +344,12 @@ export function TodayView({
 
           {workingBlocks.length > 0 && (
             <Card>
-              <CardHeader className="flex flex-row items-start justify-between gap-3">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between pb-3">
                 <div>
-                  <CardTitle>Working slots</CardTitle>
-                  <CardDescription>Work + Focus. Fill every note to keep today&apos;s streak.</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Working slots</CardTitle>
+                  <CardDescription className="hidden sm:block">Work + Focus. Fill every note to keep today&apos;s streak.</CardDescription>
                 </div>
-                <Button onClick={saveNotes} disabled={isPending} size="sm" variant="outline">
+                <Button onClick={saveNotes} disabled={isPending} variant="outline" className="w-full sm:w-auto">
                   Save all
                 </Button>
               </CardHeader>
@@ -328,22 +362,22 @@ export function TodayView({
                   return (
                     <div
                       key={b._id}
-                      className={`rounded-lg border p-3 space-y-2 ${isNow ? "border-primary bg-primary/5" : "bg-card"}`}
+                      className={`rounded-2xl border p-3 space-y-2 ${isNow ? "border-primary bg-primary/5" : "bg-card"}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{b.title}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{b.title}</p>
+                          <p className="text-[11px] sm:text-xs text-muted-foreground">
                             {b.startTime}–{b.endTime} · {b.type}
                             {past ? " · done" : start > minutes ? " · upcoming" : " · now"}
                           </p>
                         </div>
                         {done ? (
-                          <Badge variant="outline" className="text-green-500 border-green-500/40">
+                          <Badge variant="outline" className="shrink-0 text-green-500 border-green-500/40">
                             <Check className="w-3 h-3 mr-1" /> Logged
                           </Badge>
                         ) : (
-                          <Badge variant="outline">Open</Badge>
+                          <Badge variant="outline" className="shrink-0">Open</Badge>
                         )}
                       </div>
                       <textarea
@@ -351,7 +385,7 @@ export function TodayView({
                         onChange={(e) => setLogs((prev) => ({ ...prev, [b._id]: e.target.value }))}
                         placeholder="What did you do here?"
                         rows={2}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-base sm:text-sm"
                       />
                     </div>
                   );
@@ -361,7 +395,7 @@ export function TodayView({
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="hidden lg:block lg:col-span-2">
           <Card className="lg:sticky lg:top-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -387,7 +421,7 @@ export function TodayView({
                     return (
                       <div
                         key={block._id}
-                        ref={isActive ? currentRef : undefined}
+                        ref={isActive ? desktopCurrentRef : undefined}
                         className={`relative pl-6 ${isActive ? "opacity-100" : isPast ? "opacity-40" : "opacity-80"}`}
                       >
                         <div
@@ -444,12 +478,12 @@ function TaskColumn({
 }) {
   return (
     <Card className={`border-l-4 ${accent}`}>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center justify-between">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center justify-between">
           {title}
           <span className="text-xs font-normal text-muted-foreground">{tasks.length}</span>
         </CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription className="hidden sm:block">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         {tasks.length === 0 ? (
