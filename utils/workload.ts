@@ -1,12 +1,8 @@
 import { IScheduleBlock } from "@/models/ScheduleBlock";
-import { ITask } from "@/models/Task";
 
-/**
- * Calculates if the planned tasks exceed the available focus time.
- * @param schedule Today's schedule blocks
- * @param tasks Today's planned tasks
- */
-export function calculateWorkload(schedule: IScheduleBlock[], tasks: ITask[]) {
+type TaskLike = { estimatedMinutes?: number | null };
+
+export function calculateWorkload(schedule: IScheduleBlock[], tasks: TaskLike[]) {
   // Extract total available focus minutes from ScheduleBlocks
   let availableMinutes = 0;
   

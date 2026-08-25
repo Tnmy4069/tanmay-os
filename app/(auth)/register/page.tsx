@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Brain } from "lucide-react";
 
 export default function RegisterPage() {
@@ -42,75 +41,39 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center text-center">
-          <div className="bg-primary/10 p-3 rounded-full mb-2">
-            <Brain className="h-8 w-8 text-primary" />
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.18),transparent_45%)]" />
+      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
+            <Brain className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl tracking-tight">Create Account</CardTitle>
-          <CardDescription>
-            Sign up to access Tanmay OS
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none" htmlFor="name">
-                Name
-              </label>
-              <Input 
-                id="name" 
-                type="text" 
-                placeholder="Tanmay"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none" htmlFor="email">
-                Email
-              </label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="tnmyweb@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none" htmlFor="password">
-                Password
-              </label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-destructive font-medium">{error}</p>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
-            </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
+          <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Join Tanmay OS</p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="name">Name</label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="h-11 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="email">Email</label>
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="password">Password</label>
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="h-11 rounded-xl" />
+          </div>
+          {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+          <Button type="submit" className="h-11 w-full rounded-xl" disabled={loading}>
+            {loading ? "Creating account..." : "Sign up"}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="text-primary hover:underline">Sign in</Link>
+          </p>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

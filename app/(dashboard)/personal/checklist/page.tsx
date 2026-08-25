@@ -1,23 +1,48 @@
 import { auth } from "@/lib/auth";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { CalendarCheck2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MonthlyChecklist } from "@/components/features/MonthlyChecklist";
 import connectToDatabase from "@/lib/db";
 import DailyCheckin from "@/models/DailyCheckin";
+import ScheduleBlock from "@/models/ScheduleBlock";
 
-async function getMonthCheckins(userId: string, year: number, month: number) {
+async function getRecentCheckins(userId: string) {
   await connectToDatabase();
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 1);
+  const start = new Date();
+  start.setDate(start.getDate() - 150);
 
   const checkins = await DailyCheckin.find({
     userId,
-    date: { $gte: start, $lt: end },
+    date: { $gte: start },
   }).lean();
 
   return checkins.map((c) => ({
     date: c.date.toISOString(),
     followedRoutine: c.followedRoutine,
+    workLogs: (c.workLogs || []).map((log) => ({
+      blockId: log.blockId,
+      title: log.title,
+      startTime: log.startTime,
+      endTime: log.endTime,
+      note: log.note,
+    })),
+  }));
+}
+
+async function getWorkBlocks(userId: string) {
+  await connectToDatabase();
+  const blocks = await ScheduleBlock.find({
+    userId,
+    type: { $in: ["Work", "Focus"] },
+  }).sort({ startTime: 1 }).lean();
+  return blocks.map((b) => ({
+    _id: String(b._id),
+    title: b.title,
+    type: b.type,
+    dayOfWeek: b.dayOfWeek,
+    startTime: b.startTime,
+    endTime: b.endTime,
   }));
 }
 
@@ -25,31 +50,29 @@ export default async function ChecklistPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  // IST now
   const istOffset = 5.5 * 60 * 60 * 1000;
   const istNow = new Date(Date.now() + istOffset);
   const year = istNow.getUTCFullYear();
   const month = istNow.getUTCMonth() + 1;
 
-  const checkins = await getMonthCheckins(session.user.id, year, month);
+  const [checkins, workBlocks] = await Promise.all([
+    getRecentCheckins(session.user.id),
+    getWorkBlocks(session.user.id),
+  ]);
 
   return (
-    <div className="p-8 max-w-3xl mx-auto space-y-8">
-      <div className="flex flex-col gap-2 border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <CalendarCheck2 className="w-8 h-8 text-primary" />
-          Monthly Routine Checklist
-        </h1>
-        <p className="text-muted-foreground">
-          Track which days you followed your fixed daily routine. Click a past day to toggle it.
-        </p>
-      </div>
+    <div className="p-5 sm:p-8 max-w-3xl mx-auto space-y-6">
+      <PageHeader
+        title="Monthly checklist"
+        description="Log Work and Focus slots. Streak counts days where every working slot has a note."
+        icon={CalendarCheck2}
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle>Routine Follow Tracker</CardTitle>
+          <CardTitle>Work Block Tracker</CardTitle>
           <CardDescription>
-            Mark each day you consistently executed your planned routine schedule.
+            Click a day, write what you did in internship, focus, and other working slots.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -57,6 +80,7 @@ export default async function ChecklistPage() {
             initialYear={year}
             initialMonth={month}
             initialCheckins={checkins}
+            workBlocks={workBlocks}
           />
         </CardContent>
       </Card>

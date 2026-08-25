@@ -1,16 +1,11 @@
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Settings, User, Bell, Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function SettingsPage() {
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col gap-2 border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <Settings className="w-8 h-8 text-primary" />
-          Settings
-        </h1>
-        <p className="text-muted-foreground">Manage your account, preferences, and system configuration.</p>
-      </div>
+    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+      <PageHeader title="Settings" description="Account, alerts, and seed data." icon={Settings} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

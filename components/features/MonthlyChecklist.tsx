@@ -1,18 +1,47 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { ChevronLeft, ChevronRight, Check, Flame } from "lucide-react";
-import { toggleCheckinAction } from "@/app/actions/checkin.actions";
+import { getMonthCheckins, saveWorkLogsAction } from "@/app/actions/checkin.actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
+type WorkLog = {
+  blockId: string;
+  title: string;
+  type?: string;
+  startTime: string;
+  endTime: string;
+  note: string;
+};
 
 type Checkin = {
   date: string;
   followedRoutine: boolean;
+  workLogs?: WorkLog[];
+};
+
+type WorkBlock = {
+  _id: string;
+  title: string;
+  type?: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
 };
 
 type Props = {
   initialYear: number;
   initialMonth: number;
   initialCheckins: Checkin[];
+  workBlocks: WorkBlock[];
 };
 
 const MONTH_NAMES = [
@@ -21,32 +50,77 @@ const MONTH_NAMES = [
 ];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }: Props) {
+function dateKeyFromIso(iso: string) {
+  const d = new Date(iso);
+  const ist = new Date(d.getTime() + 5.5 * 60 * 60 * 1000);
+  return ist.toISOString().split("T")[0];
+}
+
+function weekdayFromDateStr(dateStr: string) {
+  return new Date(`${dateStr}T12:00:00+05:30`).getDay();
+}
+
+function prevDateStr(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d - 1));
+  return next.toISOString().slice(0, 10);
+}
+
+export function MonthlyChecklist({
+  initialYear,
+  initialMonth,
+  initialCheckins,
+  workBlocks,
+}: Props) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
-  const [checkins, setCheckins] = useState<Record<string, boolean>>(() => {
-    const m: Record<string, boolean> = {};
+  const [checkins, setCheckins] = useState<Record<string, Checkin>>(() => {
+    const m: Record<string, Checkin> = {};
     initialCheckins.forEach((c) => {
-      const d = new Date(c.date);
-      m[d.toISOString().split("T")[0]] = c.followedRoutine;
+      m[dateKeyFromIso(c.date)] = c;
     });
     return m;
   });
   const [isPending, startTransition] = useTransition();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [draftLogs, setDraftLogs] = useState<WorkLog[]>([]);
 
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  function mergeCheckins(list: Checkin[]) {
+    setCheckins((prev) => {
+      const next = { ...prev };
+      list.forEach((c) => {
+        next[dateKeyFromIso(c.date)] = c;
+      });
+      return next;
+    });
+  }
 
   function goToPrev() {
-    if (month === 1) { setYear(y => y - 1); setMonth(12); }
-    else setMonth(m => m - 1);
-  }
-  function goToNext() {
-    if (month === 12) { setYear(y => y + 1); setMonth(1); }
-    else setMonth(m => m + 1);
+    const nextMonth = month === 1 ? 12 : month - 1;
+    const nextYear = month === 1 ? year - 1 : year;
+    setMonth(nextMonth);
+    setYear(nextYear);
+    startTransition(async () => {
+      mergeCheckins(await getMonthCheckins(nextYear, nextMonth));
+    });
   }
 
-  // Build calendar grid
+  function goToNext() {
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    if (nextYear > today.getFullYear() || (nextYear === today.getFullYear() && nextMonth > today.getMonth() + 1)) {
+      return;
+    }
+    setMonth(nextMonth);
+    setYear(nextYear);
+    startTransition(async () => {
+      mergeCheckins(await getMonthCheckins(nextYear, nextMonth));
+    });
+  }
+
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
@@ -56,47 +130,113 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
   while (days.length < totalCells) days.push(null);
 
-  function toggle(day: number) {
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const full = new Date(`${dateStr}T00:00:00+05:30`).toISOString();
-    // Prevent toggling future dates
-    if (dateStr > todayStr) return;
+  function workBlocksForDate(dateStr: string) {
+    const dow = weekdayFromDateStr(dateStr);
+    return workBlocks
+      .filter((b) => b.dayOfWeek === dow)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
 
-    const next = !checkins[dateStr];
-    setCheckins((prev) => ({ ...prev, [dateStr]: next }));
-    startTransition(async () => {
-      await toggleCheckinAction(full);
+  function isDayComplete(dateStr: string) {
+    const blocks = workBlocksForDate(dateStr);
+    if (blocks.length === 0) return false;
+    const logs = checkins[dateStr]?.workLogs || [];
+    return blocks.every((block) => {
+      const log = logs.find((l) => l.blockId === block._id);
+      return Boolean(log?.note?.trim());
     });
   }
 
-  // Stats
-  const doneCount = Object.values(checkins).filter(Boolean).length;
-  const totalPast = days.filter((d) => {
-    if (!d) return false;
-    const s = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return s <= todayStr;
-  }).length;
+  function openDay(day: number) {
+    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    if (dateStr > todayStr) return;
+
+    const blocks = workBlocksForDate(dateStr);
+    const existing = checkins[dateStr]?.workLogs || [];
+    setDraftLogs(
+      blocks.map((block) => {
+        const found = existing.find((l) => l.blockId === block._id);
+        return {
+          blockId: block._id,
+          title: block.title,
+          type: block.type,
+          startTime: block.startTime,
+          endTime: block.endTime,
+          note: found?.note || "",
+        };
+      })
+    );
+    setSelectedDate(dateStr);
+  }
+
+  function saveDay() {
+    if (!selectedDate) return;
+    const dateStr = selectedDate;
+    const logs = draftLogs;
+    const complete = logs.length > 0 && logs.every((l) => l.note.trim().length > 0);
+
+    setCheckins((prev) => ({
+      ...prev,
+      [dateStr]: {
+        date: `${dateStr}T00:00:00.000Z`,
+        followedRoutine: complete,
+        workLogs: logs,
+      },
+    }));
+    setSelectedDate(null);
+
+    startTransition(async () => {
+      await saveWorkLogsAction(`${dateStr}T00:00:00+05:30`, logs);
+    });
+  }
+
+  const monthDateStrs = useMemo(() => {
+    const list: string[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const s = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      if (s <= todayStr) list.push(s);
+    }
+    return list;
+  }, [year, month, daysInMonth, todayStr]);
+
+  const doneCount = monthDateStrs.filter((s) => isDayComplete(s)).length;
+  const totalPast = monthDateStrs.length;
   const percent = totalPast > 0 ? Math.round((doneCount / totalPast) * 100) : 0;
 
-  // Streak
   let streak = 0;
-  const checkDate = new Date();
-  checkDate.setHours(0, 0, 0, 0);
-  while (true) {
-    const s = checkDate.toISOString().split("T")[0];
-    if (checkins[s]) {
+  let cursor = todayStr;
+  for (let i = 0; i < 400; i++) {
+    const blocks = workBlocksForDate(cursor);
+    if (blocks.length === 0) {
+      cursor = prevDateStr(cursor);
+      continue;
+    }
+    if (cursor === todayStr && !isDayComplete(cursor)) {
+      cursor = prevDateStr(cursor);
+      continue;
+    }
+    if (isDayComplete(cursor)) {
       streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else break;
+      cursor = prevDateStr(cursor);
+      continue;
+    }
+    break;
   }
+
+  const selectedLabel = selectedDate
+    ? new Date(`${selectedDate}T12:00:00+05:30`).toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      })
+    : "";
 
   return (
     <div className="space-y-6">
-      {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
           <div className="text-3xl font-bold text-primary">{doneCount}</div>
-          <div className="text-xs text-muted-foreground mt-1">Days followed</div>
+          <div className="text-xs text-muted-foreground mt-1">Work days logged</div>
         </div>
         <div className="text-center p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
           <div className="text-3xl font-bold text-orange-500 flex items-center justify-center gap-1">
@@ -110,10 +250,9 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Monthly consistency</span>
+          <span>Work-block notes</span>
           <span>{doneCount} / {totalPast} days</span>
         </div>
         <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden">
@@ -124,7 +263,6 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
         </div>
       </div>
 
-      {/* Month navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={goToPrev}
@@ -144,9 +282,7 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
         </button>
       </div>
 
-      {/* Calendar grid */}
       <div className="rounded-xl border overflow-hidden bg-card">
-        {/* Day headers */}
         <div className="grid grid-cols-7 border-b">
           {DAY_NAMES.map((d) => (
             <div key={d} className="py-2 text-center text-xs font-semibold text-muted-foreground">
@@ -155,7 +291,6 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
           ))}
         </div>
 
-        {/* Day cells */}
         <div className="grid grid-cols-7">
           {days.map((day, idx) => {
             if (!day) {
@@ -165,12 +300,15 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
             const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
             const isToday = dateStr === todayStr;
             const isFuture = dateStr > todayStr;
-            const isDone = checkins[dateStr] === true;
+            const isDone = isDayComplete(dateStr);
+            const blocks = workBlocksForDate(dateStr);
+            const logs = checkins[dateStr]?.workLogs || [];
+            const filled = blocks.filter((b) => logs.find((l) => l.blockId === b._id)?.note?.trim()).length;
 
             return (
               <button
                 key={day}
-                onClick={() => toggle(day)}
+                onClick={() => openDay(day)}
                 disabled={isFuture || isPending}
                 className={`aspect-square border-r border-b border-border/30 flex flex-col items-center justify-center gap-0.5 transition-all relative group
                   ${isFuture ? "opacity-30 cursor-default bg-muted/10" : "cursor-pointer"}
@@ -181,11 +319,14 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
                 <span className={`text-sm font-medium ${isToday ? "text-primary font-bold" : isDone ? "text-green-400" : "text-foreground"}`}>
                   {day}
                 </span>
-                {isDone && (
-                  <Check className="w-3.5 h-3.5 text-green-500" />
+                {isDone && <Check className="w-3.5 h-3.5 text-green-500" />}
+                {!isDone && !isFuture && blocks.length > 0 && (
+                  <span className="text-[9px] text-muted-foreground">
+                    {filled}/{blocks.length}
+                  </span>
                 )}
-                {!isDone && !isFuture && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 group-hover:bg-primary/40 transition-colors" />
+                {!isDone && !isFuture && blocks.length === 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                 )}
               </button>
             );
@@ -194,8 +335,67 @@ export function MonthlyChecklist({ initialYear, initialMonth, initialCheckins }:
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Click any past day to mark whether you followed your routine. Future dates are locked.
+        Click a day to note what you did in Work and Focus slots. Streak grows when every working slot that day has a note.
       </p>
+
+      <Dialog open={Boolean(selectedDate)} onOpenChange={(open) => { if (!open) setSelectedDate(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Working slots — {selectedLabel}</DialogTitle>
+            <DialogDescription>
+              Internship, focus, and other working blocks. Fill every slot to keep the streak.
+            </DialogDescription>
+          </DialogHeader>
+
+          {draftLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">
+              No Work or Focus blocks on this weekday. Add them in Settings → Routine.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {draftLogs.map((log, i) => (
+                <div
+                  key={log.blockId}
+                  className={`space-y-1.5 rounded-lg border p-3 ${
+                    log.type === "Focus"
+                      ? "bg-blue-500/5 border-blue-500/20"
+                      : "bg-indigo-500/5 border-indigo-500/20"
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">{log.title}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{log.type || "Work"}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
+                      {log.startTime} – {log.endTime}
+                    </p>
+                  </div>
+                  <textarea
+                    value={log.note}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDraftLogs((prev) => prev.map((item, idx) => (idx === i ? { ...item, note: value } : item)));
+                    }}
+                    placeholder="Kya kiya is slot me?"
+                    rows={3}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedDate(null)}>
+              Cancel
+            </Button>
+            <Button onClick={saveDay} disabled={isPending || draftLogs.length === 0}>
+              Save notes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

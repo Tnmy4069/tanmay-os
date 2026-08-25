@@ -83,6 +83,7 @@ export async function createTaskAction(data: Partial<ITask>) {
   
   revalidatePath("/dashboard");
   revalidatePath("/today");
+  revalidatePath("/tasks");
   
   return { success: true };
 }
@@ -119,6 +120,7 @@ export async function updateTaskAction(taskId: string, data: Partial<ITask>) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
+  revalidatePath("/tasks");
 
   return { success: true };
 }
@@ -132,11 +134,12 @@ export async function deleteTaskAction(taskId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
+  revalidatePath("/tasks");
 
   return { success: true };
 }
 
-export async function toggleTaskStatusAction(taskId: string, status: "Todo" | "In Progress" | "Done" | "Cancelled") {
+export async function toggleTaskStatusAction(taskId: string, status: "Not Started" | "Inbox" | "In Progress" | "Done" | "Cancelled") {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
   
@@ -153,6 +156,7 @@ export async function toggleTaskStatusAction(taskId: string, status: "Todo" | "I
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
+  revalidatePath("/tasks");
 
   return { success: true };
 }

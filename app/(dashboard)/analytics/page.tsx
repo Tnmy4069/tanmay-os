@@ -1,16 +1,11 @@
+import { PageHeader } from "@/components/layout/PageHeader";
 import { BarChart3, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function AnalyticsPage() {
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col gap-2 border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <BarChart3 className="w-8 h-8 text-primary" />
-          Analytics
-        </h1>
-        <p className="text-muted-foreground">Weekly execution scores, productivity trends, and cross-domain analytics.</p>
-      </div>
+    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+      <PageHeader title="Analytics" description="Weekly execution, focus hours, and trends." icon={BarChart3} />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {["Task Completion", "Focus Hours", "Career Progress", "Education"].map((m) => (
           <Card key={m} className="bg-secondary/30">
