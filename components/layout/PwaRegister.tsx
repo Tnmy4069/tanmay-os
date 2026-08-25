@@ -55,9 +55,9 @@ export function PwaRegister() {
   if (!promptEvent && !showIos) return null;
 
   return (
-    <div className="fixed inset-x-3 z-[60] bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 lg:right-4 lg:inset-x-auto lg:w-80 rounded-2xl border border-white/10 bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
+    <div className="fixed inset-x-3 z-[60] bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 lg:right-4 lg:inset-x-auto lg:w-80 rounded-2xl border border-border bg-card p-3">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
           <Download className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -73,7 +73,7 @@ export function PwaRegister() {
             </Button>
           )}
         </div>
-        <button type="button" onClick={dismiss} className="rounded-lg p-1.5 hover:bg-white/5" aria-label="Dismiss">
+        <button type="button" onClick={dismiss} className="rounded-full p-1.5 hover:bg-secondary" aria-label="Dismiss">
           <X className="h-4 w-4" />
         </button>
       </div>

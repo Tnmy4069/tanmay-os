@@ -118,7 +118,7 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
             <CardContent className="p-4">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">{c.cat}</p>
               <p className="text-2xl font-semibold mt-1">{c.accuracy}%</p>
-              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
                 <div className="h-full bg-primary rounded-full" style={{ width: `${c.accuracy}%` }} />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
@@ -143,7 +143,7 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
           {items.map((s) => {
             const acc = s.attempted ? Math.round((s.correct / s.attempted) * 100) : 0;
             return (
-              <div key={s._id} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+              <div key={s._id} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium">{s.category}</p>
@@ -157,7 +157,7 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
                   </p>
                   {s.notes && <p className="text-xs text-muted-foreground mt-1">{s.notes}</p>}
                 </div>
-                <button onClick={() => remove(s._id)} className="p-2 rounded-lg hover:bg-white/5 text-destructive">
+                <button onClick={() => remove(s._id)} className="p-2 rounded-lg hover:bg-secondary text-destructive">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

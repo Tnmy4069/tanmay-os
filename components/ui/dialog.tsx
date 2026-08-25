@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/70 backdrop-blur-[2px]",
       className
     )}
     {...props}
@@ -38,7 +38,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 grid w-full gap-4 border bg-background p-5 shadow-lg duration-200 max-lg:inset-x-0 max-lg:bottom-[calc(4.25rem+env(safe-area-inset-bottom))] max-lg:top-auto max-lg:max-h-[min(92dvh,calc(100dvh-5.5rem))] max-lg:overflow-y-auto max-lg:rounded-t-3xl lg:left-[50%] lg:top-[50%] lg:max-w-lg lg:translate-x-[-50%] lg:translate-y-[-50%] lg:rounded-2xl lg:p-6",
+        "fixed z-50 grid w-full gap-4 border border-border bg-popover p-5 duration-200 ease-out max-lg:inset-x-0 max-lg:bottom-[calc(4.25rem+env(safe-area-inset-bottom))] max-lg:top-auto max-lg:max-h-[min(92dvh,calc(100dvh-5.5rem))] max-lg:overflow-y-auto max-lg:rounded-t-3xl lg:left-[50%] lg:top-[50%] lg:max-w-lg lg:translate-x-[-50%] lg:translate-y-[-50%] lg:rounded-2xl lg:p-6",
         className
       )}
       {...props}

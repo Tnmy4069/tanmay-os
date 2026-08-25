@@ -34,8 +34,8 @@ export default async function SettingsPage() {
           <CardContent>
             <div className="flex flex-col gap-4">
               {session?.user && (
-                <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 px-4 py-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-sm ring-1 ring-primary/20">
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/12 text-primary font-semibold text-sm">
                     {(session.user.name ?? session.user.email ?? "U")[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">

@@ -47,7 +47,7 @@ function pretty(iso: string) {
 }
 
 const COURSE_TONE: Record<IitmCourseStatus, string> = {
-  Planned: "bg-white/5 text-muted-foreground",
+  Planned: "bg-secondary text-muted-foreground",
   "In Progress": "bg-sky-500/15 text-sky-300",
   Completed: "bg-emerald-500/15 text-emerald-300",
   Dropped: "bg-red-500/15 text-red-300",
@@ -275,7 +275,7 @@ export function IitmTracker({
                       <Button size="sm" variant="ghost" onClick={() => openEditCourse(c)}>
                         Edit
                       </Button>
-                      <button onClick={() => removeCourse(c._id)} className="p-2 rounded-lg hover:bg-white/5 text-destructive">
+                      <button onClick={() => removeCourse(c._id)} className="p-2 rounded-lg hover:bg-secondary text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -289,7 +289,7 @@ export function IitmTracker({
                         return (
                           <div
                             key={d._id}
-                            className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-white/5 p-3 ${late ? "bg-destructive/5" : "bg-white/[0.02]"}`}
+                            className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-border p-3 ${late ? "bg-destructive/5" : "bg-secondary/40"}`}
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{d.title}</p>
@@ -303,7 +303,7 @@ export function IitmTracker({
                                 value={d.status}
                                 disabled={isPending}
                                 onChange={(e) => setDlStatus(d._id, e.target.value as IitmDeadlineStatus)}
-                                className="h-8 rounded-lg border border-white/10 bg-transparent px-2 text-xs"
+                                className="h-8 rounded-lg border border-border bg-transparent px-2 text-xs"
                               >
                                 {IITM_DEADLINE_STATUSES.map((s) => (
                                   <option key={s} value={s} className="bg-card">{s}</option>

@@ -140,7 +140,7 @@ export function LeadershipHub({
         {showCtf ? <Stat label="CTFs solved" value={solvedCtfs} tone="text-primary" /> : <Stat label="Done events" value={events.filter((e) => e.status === "Done").length} />}
       </div>
 
-      <div className="flex flex-wrap gap-1.5 border-b border-white/5 pb-2">
+      <div className="flex flex-wrap gap-1.5 border-b border-border pb-2">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -173,7 +173,7 @@ export function LeadershipHub({
           ) : (
             <div className="space-y-2">
               {tasks.map((t) => (
-                <div key={t._id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                <div key={t._id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-border bg-card p-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium">{t.title}</p>
                     <p className="text-xs text-muted-foreground">
@@ -193,7 +193,7 @@ export function LeadershipHub({
                           await updateLeadTaskStatusAction(club, t._id, status);
                         });
                       }}
-                      className="h-8 rounded-lg border border-white/10 bg-transparent px-2 text-xs"
+                      className="h-8 rounded-lg border border-border bg-transparent px-2 text-xs"
                     >
                       {LEADERSHIP_TASK_STATUSES.map((s) => (
                         <option key={s} value={s} className="bg-card">{s}</option>
@@ -244,7 +244,7 @@ export function LeadershipHub({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {events.map((e) => (
-                <div key={e._id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-2">
+                <div key={e._id} className="rounded-2xl border border-border bg-card p-4 space-y-2">
                   <div className="flex justify-between gap-2">
                     <p className="font-semibold">{e.title}</p>
                     <span className="text-[10px] uppercase text-muted-foreground">{e.status}</span>
@@ -291,7 +291,7 @@ export function LeadershipHub({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {members.map((m) => (
-                <div key={m._id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                <div key={m._id} className="rounded-2xl border border-border bg-card p-4">
                   <p className="font-semibold">{m.name}</p>
                   <p className="text-sm text-primary">{m.role}</p>
                   {m.contact && <p className="text-xs text-muted-foreground mt-1">{m.contact}</p>}
@@ -340,7 +340,7 @@ export function LeadershipHub({
           ) : (
             <div className="space-y-2">
               {ctfs.map((c) => (
-                <div key={c._id} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                <div key={c._id} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
                   <div className="flex-1">
                     <p className="font-medium">{c.title}</p>
                     <p className="text-xs text-muted-foreground">

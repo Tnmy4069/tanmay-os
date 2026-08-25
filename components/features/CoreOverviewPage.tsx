@@ -30,9 +30,9 @@ export function CoreOverviewPage({
             <Link
               key={item.id}
               href={item.href}
-              className="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 transition-all hover:border-primary/25 hover:bg-primary/5 active:scale-[0.98]"
+              className="group flex items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 duration-200 hover:border-primary/30 hover:bg-secondary/50 active:scale-[0.98]"
             >
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-colors group-hover:bg-primary/15">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">

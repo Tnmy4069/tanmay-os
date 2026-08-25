@@ -23,7 +23,7 @@ import {
 import { JOB_STATUSES, type JobStatus } from "@/lib/career-constants";
 
 const STATUS_STYLE: Record<JobStatus, string> = {
-  Wishlist: "bg-white/5 text-muted-foreground",
+  Wishlist: "bg-secondary text-muted-foreground",
   Applied: "bg-sky-500/15 text-sky-300",
   OA: "bg-amber-500/15 text-amber-300",
   Interview: "bg-violet-500/15 text-violet-300",
@@ -172,9 +172,7 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`min-h-9 shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                filter === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:text-foreground"
-              }`}
+              className={`chip ${filter === s ? "chip-active" : ""}`}
             >
               {s} {counts[s] ? `(${counts[s]})` : ""}
             </button>
@@ -191,7 +189,7 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {visible.map((job) => (
-            <div key={job._id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-3">
+            <div key={job._id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold truncate">{job.company}</p>
@@ -212,7 +210,7 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
                 <select
                   value={job.status}
                   onChange={(e) => setStatus(job, e.target.value as JobStatus)}
-                  className="h-8 flex-1 rounded-lg border border-white/10 bg-transparent px-2 text-xs"
+                  className="h-8 flex-1 rounded-lg border border-border bg-transparent px-2 text-xs"
                   disabled={isPending}
                 >
                   {JOB_STATUSES.map((s) => (
@@ -222,14 +220,14 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
                   ))}
                 </select>
                 {job.jobUrl && (
-                  <a href={job.jobUrl} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-white/5" aria-label="Open posting">
+                  <a href={job.jobUrl} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-secondary" aria-label="Open posting">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
-                <button onClick={() => openEdit(job)} className="rounded-lg p-2 hover:bg-white/5" aria-label="Edit">
+                <button onClick={() => openEdit(job)} className="rounded-lg p-2 hover:bg-secondary" aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </button>
-                <button onClick={() => remove(job._id)} className="rounded-lg p-2 hover:bg-white/5 text-destructive" aria-label="Delete">
+                <button onClick={() => remove(job._id)} className="rounded-lg p-2 hover:bg-secondary text-destructive" aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

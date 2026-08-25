@@ -30,10 +30,8 @@ function NavLinkItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "group flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
-        isActive
-          ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]"
-          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+        "group flex min-h-10 items-center rounded-full px-3 py-2 text-sm font-medium duration-200 ease-out active:scale-[0.98]",
+        isActive ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
       <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
@@ -61,10 +59,8 @@ function CoreNavItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "group flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
-        isActive
-          ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]"
-          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+        "group flex min-h-10 items-center rounded-full px-3 py-2 text-sm font-medium duration-200 ease-out active:scale-[0.98]",
+        isActive ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
       <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
@@ -147,13 +143,13 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             onClick={() => setMoreOpen(false)}
           />
           <aside
-            className="absolute inset-x-0 bottom-0 max-h-[88dvh] rounded-t-3xl border-t border-white/10 bg-card pb-[env(safe-area-inset-bottom)] shadow-2xl"
+            className="absolute inset-x-0 bottom-0 max-h-[88dvh] rounded-t-3xl border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
             role="dialog"
             aria-modal="true"
             aria-label="More"
           >
             <div className="flex justify-center pt-3">
-              <div className="h-1 w-10 rounded-full bg-white/20" />
+              <div className="h-1 w-10 rounded-full bg-border" />
             </div>
             <div className="flex items-center justify-between px-5 pb-2 pt-1">
               <div className="flex items-center gap-2">
@@ -163,7 +159,7 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-xl p-2.5 hover:bg-white/5"
+                className="rounded-full p-2.5 hover:bg-secondary"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -180,7 +176,7 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
       )}
 
       <nav
-        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
         aria-label="Primary"
       >
         <div className="grid grid-cols-5">
@@ -192,11 +188,13 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium duration-200",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <Icon className={cn("h-5 w-5", active && "stroke-[2.2]")} />
+                <span className={cn("flex h-7 w-11 items-center justify-center rounded-full", active && "bg-primary/12")}>
+                  <Icon className="h-5 w-5" />
+                </span>
                 {tab.name}
               </Link>
             );
@@ -205,19 +203,21 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             type="button"
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+              "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium duration-200",
               !tabActive || moreOpen ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <Menu className="h-5 w-5" />
+            <span className={cn("flex h-7 w-11 items-center justify-center rounded-full", (!tabActive || moreOpen) && "bg-primary/12")}>
+              <Menu className="h-5 w-5" />
+            </span>
             More
           </button>
         </div>
       </nav>
 
-      <aside className="hidden lg:flex h-full w-[260px] flex-col border-r border-white/5 bg-card/70 backdrop-blur-xl">
-        <div className="flex h-16 items-center gap-2.5 border-b border-white/5 px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
+      <aside className="hidden lg:flex h-full w-[248px] flex-col border-r border-border bg-card/80">
+        <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/12">
             <Brain className="h-4 w-4 text-primary" />
           </div>
           <div>

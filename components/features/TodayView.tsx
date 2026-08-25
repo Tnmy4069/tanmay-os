@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { AlertTriangle, Check, Clock, Flame, Plus, Save } from "lucide-react";
+import { AlertTriangle, Check, Clock, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { TaskItem } from "@/components/features/TaskItem";
 import { TaskModal } from "@/components/features/TaskModal";
 import { saveWorkLogsAction } from "@/app/actions/checkin.actions";
 import { parseTimeToMinutes } from "@/utils/date";
+import { StatRow } from "@/components/layout/StatRow";
 
 type Block = {
   _id: string;
@@ -227,61 +228,38 @@ export function TodayView({
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-primary">Now</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-            <p className="text-sm sm:text-base font-semibold leading-tight line-clamp-2">
-              {current ? current.title : "Free / between"}
-            </p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 tabular-nums">
-              {current ? `${current.startTime}–${current.endTime} · ${durationLabel(remaining)} left` : "No active slot"}
-            </p>
-            {current && (
-              <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: `${currentProgress}%` }} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Next</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-            <p className="text-sm sm:text-base font-semibold leading-tight line-clamp-2">{next ? next.title : "End of day"}</p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 tabular-nums">
-              {next ? `${next.startTime}–${next.endTime}` : "—"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className={capacityPct > 100 ? "border-destructive/40" : ""}>
-          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Capacity</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-            <p className="text-xl sm:text-2xl font-semibold tabular-nums">{capacityPct}%</p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
-              {durationLabel(workload.plannedMinutes)} / {durationLabel(workload.availableMinutes)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-orange-500/5 border-orange-500/20">
-          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-            <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wide text-orange-500 flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5" /> Notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-            <p className="text-xl sm:text-2xl font-semibold tabular-nums">
-              {loggedCount}/{workingBlocks.length}
-            </p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">Slots logged</p>
-          </CardContent>
-        </Card>
-      </div>
+      <StatRow
+        items={[
+          {
+            label: "Now",
+            value: current ? current.title : "Free / between",
+            hint: current ? `${current.startTime}–${current.endTime} · ${durationLabel(remaining)} left` : "No active slot",
+            tone: "primary",
+          },
+          {
+            label: "Next",
+            value: next ? next.title : "End of day",
+            hint: next ? `${next.startTime}–${next.endTime}` : "—",
+          },
+          {
+            label: "Capacity",
+            value: `${capacityPct}%`,
+            hint: `${durationLabel(workload.plannedMinutes)} / ${durationLabel(workload.availableMinutes)}`,
+            tone: capacityPct > 100 ? "danger" : "default",
+          },
+          {
+            label: "Notes",
+            value: `${loggedCount}/${workingBlocks.length}`,
+            hint: "Slots logged",
+            tone: "warn",
+          },
+        ]}
+      />
+      {current && (
+        <div className="-mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full" style={{ width: `${currentProgress}%` }} />
+        </div>
+      )}
 
       {blocks.length > 0 && (
         <div className="-mx-4 px-4 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] lg:hidden">
@@ -292,7 +270,7 @@ export function TodayView({
                 key={`m-${block._id}`}
                 ref={isActive ? currentRef : undefined}
                 className={`min-w-[42%] snap-start rounded-2xl border px-3 py-2.5 ${
-                  isActive ? "border-primary/40 bg-primary/10" : "border-white/5 bg-white/[0.02] opacity-70"
+                  isActive ? "border-primary/40 bg-primary/10" : "border-border opacity-70"
                 }`}
               >
                 <p className="text-[11px] tabular-nums text-muted-foreground">

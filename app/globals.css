@@ -33,43 +33,43 @@
     --card-foreground: #14151a;
     --popover: #fffcf7;
     --popover-foreground: #14151a;
-    --primary: #0f766e;
-    --primary-foreground: #f0fdfa;
-    --secondary: #ebe6dc;
+    --primary: #6d28d9;
+    --primary-foreground: #f5f3ff;
+    --secondary: #ece7f4;
     --secondary-foreground: #14151a;
-    --muted: #ebe6dc;
-    --muted-foreground: #6b6a66;
-    --accent: #e7f6f3;
-    --accent-foreground: #115e59;
+    --muted: #ece7f4;
+    --muted-foreground: #6b6574;
+    --accent: #efe8ff;
+    --accent-foreground: #4c1d95;
     --destructive: #dc2626;
     --destructive-foreground: #fef2f2;
-    --border: #ddd6c8;
-    --input: #ddd6c8;
-    --ring: #0f766e;
-    --radius: 1rem;
+    --border: #ddd4e8;
+    --input: #ddd4e8;
+    --ring: #6d28d9;
+    --radius: 1.125rem;
   }
 
   .dark {
-    --background: #08090d;
-    --foreground: #f3f1ec;
-    --card: #101218;
-    --card-foreground: #f3f1ec;
-    --popover: #101218;
-    --popover-foreground: #f3f1ec;
-    --primary: #2dd4bf;
-    --primary-foreground: #042f2e;
-    --secondary: #1a1d26;
-    --secondary-foreground: #f3f1ec;
-    --muted: #1a1d26;
-    --muted-foreground: #9b9a96;
-    --accent: #132422;
-    --accent-foreground: #99f6e4;
-    --destructive: #f87171;
+    --background: #0b0a10;
+    --foreground: #f3f0fa;
+    --card: #15131c;
+    --card-foreground: #f3f0fa;
+    --popover: #1a1722;
+    --popover-foreground: #f3f0fa;
+    --primary: #c4b5fd;
+    --primary-foreground: #1e1b4b;
+    --secondary: #1f1c28;
+    --secondary-foreground: #f3f0fa;
+    --muted: #1f1c28;
+    --muted-foreground: #9b96a8;
+    --accent: #231b33;
+    --accent-foreground: #ddd6fe;
+    --destructive: #fb7185;
     --destructive-foreground: #1c0b0b;
-    --border: #232833;
-    --input: #232833;
-    --ring: #2dd4bf;
-    --radius: 1rem;
+    --border: #2c2838;
+    --input: #2c2838;
+    --ring: #c4b5fd;
+    --radius: 1.125rem;
   }
 }
 
@@ -83,15 +83,18 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image:
-      radial-gradient(1200px 500px at 10% -10%, rgba(45, 212, 191, 0.08), transparent 50%),
-      radial-gradient(800px 400px at 100% 0%, rgba(99, 102, 241, 0.08), transparent 45%);
+    background-image: radial-gradient(900px 420px at 8% -8%, rgba(167, 139, 250, 0.14), transparent 55%);
     background-attachment: fixed;
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
+  }
+  a,
+  button,
+  [role="button"] {
+    transition: color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out, transform 200ms ease-out, opacity 200ms ease-out;
   }
   button,
   a,
@@ -112,6 +115,26 @@
 
 .app-page {
   @apply mx-auto w-full space-y-5 px-4 pt-4 pb-6 sm:space-y-6 sm:px-6 sm:pt-6 lg:p-8;
+}
+
+.surface {
+  @apply rounded-2xl border border-border bg-card;
+}
+
+.stat-label {
+  @apply text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground;
+}
+
+.chip {
+  @apply inline-flex min-h-9 shrink-0 items-center rounded-full border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground transition-[color,background-color,border-color,transform] duration-200 ease-out active:scale-[0.98];
+}
+
+.chip-active {
+  @apply border-primary/30 bg-primary text-primary-foreground;
+}
+
+.field {
+  @apply h-11 w-full rounded-xl border border-input bg-transparent px-3 text-base shadow-none outline-none transition-[border-color,box-shadow] duration-200 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring sm:h-10 sm:text-sm;
 }
 
 @media (min-width: 640px) {

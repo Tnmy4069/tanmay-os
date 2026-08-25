@@ -25,7 +25,7 @@ const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 const STATUS_TONE: Record<SkillStatus, string> = {
-  Planned: "bg-white/5 text-muted-foreground",
+  Planned: "bg-secondary text-muted-foreground",
   "In Progress": "bg-sky-500/15 text-sky-300",
   Completed: "bg-emerald-500/15 text-emerald-300",
   Paused: "bg-amber-500/15 text-amber-300",
@@ -148,7 +148,7 @@ export function UpskillTracker({
               key={s}
               onClick={() => setFilter(s)}
               className={`rounded-full px-3 py-1 text-xs font-medium ${
-                filter === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:text-foreground"
+                filter === s ? "chip-active" : "chip"
               }`}
             >
               {s}
@@ -170,7 +170,7 @@ export function UpskillTracker({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {visible.map((c) => (
-            <div key={c._id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 space-y-3">
+            <div key={c._id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="font-semibold truncate">{c.title}</p>
@@ -188,7 +188,7 @@ export function UpskillTracker({
                   <span>Progress</span>
                   <span>{c.progress}%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                   <div className="h-full bg-primary rounded-full" style={{ width: `${c.progress}%` }} />
                 </div>
               </div>
@@ -221,11 +221,11 @@ export function UpskillTracker({
                   Edit
                 </Button>
                 {c.url && (
-                  <a href={c.url} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-white/5">
+                  <a href={c.url} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-secondary">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
-                <button onClick={() => remove(c._id)} className="ml-auto p-2 rounded-lg hover:bg-white/5 text-destructive">
+                <button onClick={() => remove(c._id)} className="ml-auto p-2 rounded-lg hover:bg-secondary text-destructive">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

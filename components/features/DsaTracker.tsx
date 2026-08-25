@@ -133,7 +133,7 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
 
       <div className="flex flex-wrap gap-1.5">
         {DSA_TOPICS.map((t) => (
-          <span key={t} className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-muted-foreground">
+          <span key={t} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground">
             {t} {topicCounts[t] ? `· ${topicCounts[t]}` : ""}
           </span>
         ))}
@@ -165,12 +165,12 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
       ) : (
         <div className="space-y-2">
           {visible.map((p) => (
-            <div key={p._id} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+            <div key={p._id} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium truncate">{p.title}</p>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${DIFF_TONE[p.difficulty]}`}>{p.difficulty}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground">{p.status}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{p.status}</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {p.topic} · {p.platform} · {new Date(p.solvedAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
@@ -179,11 +179,11 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
                 {p.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.notes}</p>}
               </div>
               {p.url && (
-                <a href={p.url} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-white/5">
+                <a href={p.url} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-secondary">
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
-              <button onClick={() => remove(p._id)} className="p-2 rounded-lg hover:bg-white/5 text-destructive">
+              <button onClick={() => remove(p._id)} className="p-2 rounded-lg hover:bg-secondary text-destructive">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

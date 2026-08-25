@@ -10,7 +10,7 @@ const PRIORITY_TONE: Record<string, string> = {
   "P0 Critical": "text-red-400 bg-red-500/10",
   "P1 High": "text-orange-400 bg-orange-500/10",
   "P2 Medium": "text-yellow-400 bg-yellow-500/10",
-  "P3 Low": "text-zinc-400 bg-white/5",
+  "P3 Low": "text-zinc-400 bg-secondary",
 };
 
 export function TaskItem({ task }: { task: ClientTask }) {
@@ -36,15 +36,15 @@ export function TaskItem({ task }: { task: ClientTask }) {
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded-2xl border border-white/5 hover:border-primary/25 hover:bg-white/[0.03] active:scale-[0.99] transition-all cursor-pointer group ${
-          isDone ? "opacity-50" : "bg-white/[0.02]"
+        className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded-2xl border border-border duration-200 ease-out hover:border-primary/30 hover:bg-secondary/40 active:scale-[0.99] cursor-pointer ${
+          isDone ? "opacity-50" : ""
         }`}
       >
         <button
           onClick={toggleStatus}
           disabled={isPending}
           className={`flex-shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors
-            ${isDone ? "bg-primary border-primary text-primary-foreground" : "border-white/20 hover:border-primary"}`}
+            ${isDone ? "bg-primary border-primary text-primary-foreground" : "border-border hover:border-primary"}`}
         >
           {isDone && <Check className="w-3.5 h-3.5" />}
         </button>

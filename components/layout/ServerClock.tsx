@@ -65,7 +65,7 @@ export function ServerClock() {
   if (!time) return null;
 
   return (
-    <div className="mx-2 mb-3 rounded-xl border border-white/5 bg-white/3 px-3 py-2.5">
+    <div className="mx-2 mb-3 rounded-xl border border-border bg-secondary/40 px-3 py-2.5">
       <div className="flex items-center gap-1.5 mb-0.5">
         <span className="relative flex h-1.5 w-1.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />

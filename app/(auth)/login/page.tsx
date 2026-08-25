@@ -41,10 +41,9 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center p-4 pb-[env(safe-area-inset-bottom)]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.18),transparent_45%)]" />
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-card/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+      <div className="relative w-full max-w-md rounded-3xl border border-border bg-card p-6 sm:p-8">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12">
             <Brain className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Tanmay OS</h1>
@@ -75,7 +74,7 @@ export default function LoginPage() {
             />
           </div>
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
-          <Button type="submit" className="h-11 w-full rounded-xl" disabled={loading}>
+          <Button type="submit" className="h-11 w-full" disabled={loading}>
             {loading ? "Authenticating..." : "Sign in"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">

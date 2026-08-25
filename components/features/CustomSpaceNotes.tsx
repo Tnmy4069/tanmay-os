@@ -24,7 +24,7 @@ export function CustomSpaceNotes({
         onChange={(e) => setNotes(e.target.value)}
         rows={10}
         placeholder="Notes, goals, links — this space is yours."
-        className="w-full rounded-2xl border border-input bg-background px-3 py-3 text-base sm:text-sm min-h-40"
+        className="w-full rounded-2xl border border-input bg-transparent px-3 py-3 text-base sm:text-sm min-h-40"
       />
       <Button
         className="w-full sm:w-auto"

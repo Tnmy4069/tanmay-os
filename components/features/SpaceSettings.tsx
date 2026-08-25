@@ -99,7 +99,7 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                       return (
                         <li
                           key={item.id}
-                          className="flex items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-2"
+                          className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2"
                         >
                           <ItemIcon className="h-4 w-4 text-muted-foreground shrink-0 ml-1" />
                           <Input

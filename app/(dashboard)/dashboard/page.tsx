@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { TaskItem } from "@/components/features/TaskItem";
 import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST, TIMEZONE } from "@/utils/date";
 import { formatInTimeZone } from "date-fns-tz";
+import { StatRow } from "@/components/layout/StatRow";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -69,43 +70,27 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <Card className="bg-primary/10 border-primary/20">
-              <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wider text-primary">Now</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-sm sm:text-lg font-semibold leading-tight line-clamp-2">
-                  {currentBlock ? currentBlock.title : "None"}
-                </div>
-                <div className="text-[11px] sm:text-sm text-muted-foreground mt-1 tabular-nums">
-                  {currentBlock ? `${currentBlock.startTime}–${currentBlock.endTime}` : "—"}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">Next</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-sm sm:text-lg font-semibold leading-tight line-clamp-2">
-                  {nextBlock ? nextBlock.title : "End of day"}
-                </div>
-                <div className="text-[11px] sm:text-sm text-muted-foreground mt-1 tabular-nums">
-                  {nextBlock ? `${nextBlock.startTime}–${nextBlock.endTime}` : "—"}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-destructive/20 bg-destructive/5">
-              <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-[10px] sm:text-xs uppercase tracking-wider text-destructive">Overdue</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-2xl sm:text-3xl font-semibold tabular-nums text-destructive">{overdueTasks.length}</div>
-                <div className="text-[11px] sm:text-sm text-muted-foreground mt-1">Need attention</div>
-              </CardContent>
-            </Card>
-          </div>
+          <StatRow
+            items={[
+              {
+                label: "Now",
+                value: currentBlock ? currentBlock.title : "None",
+                hint: currentBlock ? `${currentBlock.startTime}–${currentBlock.endTime}` : "—",
+                tone: "primary",
+              },
+              {
+                label: "Next",
+                value: nextBlock ? nextBlock.title : "End of day",
+                hint: nextBlock ? `${nextBlock.startTime}–${nextBlock.endTime}` : "—",
+              },
+              {
+                label: "Overdue",
+                value: overdueTasks.length,
+                hint: "Need attention",
+                tone: "danger",
+              },
+            ]}
+          />
 
           <Card>
             <CardHeader className="pb-3">
@@ -114,7 +99,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               {mustDoTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground rounded-2xl border border-dashed border-white/10 px-4 py-5">
+                <p className="text-sm text-muted-foreground rounded-2xl border border-dashed border-border px-4 py-5">
                   Clear. No critical tasks pending.
                 </p>
               ) : (() => {
@@ -127,9 +112,9 @@ export default async function DashboardPage() {
                     ))}
                     {done.length > 0 && pending.length > 0 && (
                       <li className="flex items-center gap-2 py-1">
-                        <div className="h-px flex-1 bg-white/5" />
+                        <div className="h-px flex-1 bg-border" />
                         <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Done</span>
-                        <div className="h-px flex-1 bg-white/5" />
+                        <div className="h-px flex-1 bg-border" />
                       </li>
                     )}
                     {done.map((task) => (
@@ -187,7 +172,7 @@ export default async function DashboardPage() {
                       <div
                         key={`m-${String(block._id)}`}
                         className={`min-w-[38%] snap-start rounded-2xl border px-3 py-2.5 ${
-                          isActive ? "border-primary/40 bg-primary/10" : "border-white/5 bg-white/[0.02] opacity-70"
+                          isActive ? "border-primary/40 bg-primary/10" : "border-border opacity-70"
                         }`}
                       >
                         <p className="text-[11px] tabular-nums text-muted-foreground">{block.startTime}</p>
@@ -198,7 +183,7 @@ export default async function DashboardPage() {
                     );
                   })}
                 </div>
-                <div className="relative hidden border-l border-white/10 ml-3 space-y-5 lg:block">
+                <div className="relative hidden border-l border-border ml-3 space-y-5 lg:block">
                   {todaySchedule.map((block) => {
                     const isActive = currentBlock && String(currentBlock._id) === String(block._id);
                     return (
