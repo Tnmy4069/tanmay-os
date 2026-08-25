@@ -28,7 +28,7 @@ export default async function RoutineEditorPage() {
   const blocks = await getAllBlocks(session.user.id);
 
   return (
-    <div className="p-5 sm:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="app-page max-w-5xl">
       <PageHeader
         title="Routine editor"
         description="Weekly fixed blocks. Tasks cannot overlap these unless override is allowed."

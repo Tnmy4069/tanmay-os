@@ -233,19 +233,19 @@ export function MonthlyChecklist({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/20">
-          <div className="text-3xl font-bold text-primary">{doneCount}</div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="text-center p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="text-xl sm:text-3xl font-bold text-primary">{doneCount}</div>
           <div className="text-xs text-muted-foreground mt-1">Work days logged</div>
         </div>
-        <div className="text-center p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
-          <div className="text-3xl font-bold text-orange-500 flex items-center justify-center gap-1">
-            <Flame className="w-6 h-6" />{streak}
+        <div className="text-center p-3 sm:p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+          <div className="text-xl sm:text-3xl font-bold text-orange-500 flex items-center justify-center gap-1">
+            <Flame className="w-4 h-4 sm:w-6 sm:h-6" />{streak}
           </div>
           <div className="text-xs text-muted-foreground mt-1">Current streak</div>
         </div>
-        <div className="text-center p-4 rounded-xl bg-green-500/5 border border-green-500/20">
-          <div className="text-3xl font-bold text-green-500">{percent}%</div>
+        <div className="text-center p-3 sm:p-4 rounded-xl bg-green-500/5 border border-green-500/20">
+          <div className="text-xl sm:text-3xl font-bold text-green-500">{percent}%</div>
           <div className="text-xs text-muted-foreground mt-1">This month</div>
         </div>
       </div>
@@ -285,8 +285,9 @@ export function MonthlyChecklist({
       <div className="rounded-xl border overflow-hidden bg-card">
         <div className="grid grid-cols-7 border-b">
           {DAY_NAMES.map((d) => (
-            <div key={d} className="py-2 text-center text-xs font-semibold text-muted-foreground">
-              {d}
+            <div key={d} className="py-2 text-center text-[10px] font-semibold text-muted-foreground sm:text-xs">
+              <span className="sm:hidden">{d[0]}</span>
+              <span className="hidden sm:inline">{d}</span>
             </div>
           ))}
         </div>

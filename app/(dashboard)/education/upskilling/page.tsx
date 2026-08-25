@@ -7,7 +7,7 @@ export default async function UpskillingPage() {
   const [courses, hoursThisMonth] = await Promise.all([getSkillCourses(), getSkillHoursThisMonth()]);
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="Upskilling"
         description="Courses and certs outside IITM. Log study time so monthly hours stay real."

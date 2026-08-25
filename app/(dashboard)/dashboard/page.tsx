@@ -51,7 +51,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="app-page max-w-7xl space-y-8">
       <PageHeader
         title={`Hey, ${session.user.name?.split(" ")[0] || "Tanmay"}`}
         description="One screen for now, next, and what cannot slip."

@@ -36,14 +36,14 @@ export function TaskItem({ task }: { task: ClientTask }) {
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className={`flex items-center gap-3 p-3 rounded-2xl border border-white/5 hover:border-primary/25 hover:bg-white/[0.03] transition-colors cursor-pointer group ${
+        className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded-2xl border border-white/5 hover:border-primary/25 hover:bg-white/[0.03] active:scale-[0.99] transition-all cursor-pointer group ${
           isDone ? "opacity-50" : "bg-white/[0.02]"
         }`}
       >
         <button
           onClick={toggleStatus}
           disabled={isPending}
-          className={`flex-shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-colors
+          className={`flex-shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors
             ${isDone ? "bg-primary border-primary text-primary-foreground" : "border-white/20 hover:border-primary"}`}
         >
           {isDone && <Check className="w-3.5 h-3.5" />}

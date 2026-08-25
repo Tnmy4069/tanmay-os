@@ -7,7 +7,7 @@ export default async function CyberXPage() {
   const data = await getLeadershipData("CyberX");
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="CyberX"
         description="Security club ops plus a CTF challenge log."

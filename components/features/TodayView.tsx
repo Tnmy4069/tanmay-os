@@ -178,20 +178,20 @@ export function TodayView({
   }
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="app-page max-w-7xl">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Good focus, {userName}</p>
-          <h1 className="text-3xl font-bold tracking-tight">Today</h1>
-          <p className="text-muted-foreground mt-1">{dateLabel} · {clock} IST</p>
+          <h1 className="text-xl sm:text-3xl font-semibold tracking-tight">Today</h1>
+          <p className="text-sm text-muted-foreground mt-1">{dateLabel} · {clock} IST</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href="/personal/checklist">Checklist</Link>
           </Button>
           <TaskModal
             trigger={
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Task
               </Button>

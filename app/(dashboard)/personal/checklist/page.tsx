@@ -61,7 +61,7 @@ export default async function ChecklistPage() {
   ]);
 
   return (
-    <div className="p-5 sm:p-8 max-w-3xl mx-auto space-y-6">
+    <div className="app-page max-w-3xl">
       <PageHeader
         title="Monthly checklist"
         description="Log Work and Focus slots. Streak counts days where every working slot has a note."

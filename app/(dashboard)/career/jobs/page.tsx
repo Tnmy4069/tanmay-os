@@ -7,7 +7,7 @@ export default async function JobHuntPage() {
   const jobs = await getCareerJobs();
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="Job hunt"
         description="Track every application from wishlist to offer. Update status as rounds happen."

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function AnalyticsPage() {
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader title="Analytics" description="Weekly execution, focus hours, and trends." icon={BarChart3} />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {["Task Completion", "Focus Hours", "Career Progress", "Education"].map((m) => (

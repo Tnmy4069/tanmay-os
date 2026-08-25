@@ -1,17 +1,16 @@
-import { Dumbbell, Heart, Activity } from "lucide-react";
+import { Dumbbell, Heart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function FitnessPage() {
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col gap-2 border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <Dumbbell className="w-8 h-8 text-primary" />
-          Fitness Tracker
-        </h1>
-        <p className="text-muted-foreground">Log workouts, track sleep, and monitor your physical wellbeing.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="app-page max-w-7xl">
+      <PageHeader
+        title="Fitness"
+        description="Log workouts, track sleep, and monitor your physical wellbeing."
+        icon={Dumbbell}
+      />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="bg-green-500/5 border-green-500/20">
           <CardHeader className="pb-2"><CardTitle className="text-sm text-green-500 uppercase">Workouts This Week</CardTitle></CardHeader>
           <CardContent><div className="text-3xl font-bold">0</div></CardContent>

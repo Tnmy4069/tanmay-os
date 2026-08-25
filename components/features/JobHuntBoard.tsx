@@ -167,12 +167,12 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
           {(["All", ...JOB_STATUSES] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-9 shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filter === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -180,7 +180,7 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
             </button>
           ))}
         </div>
-        <Button onClick={openAdd}>
+        <Button onClick={openAdd} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Add application
         </Button>

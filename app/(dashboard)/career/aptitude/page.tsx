@@ -7,7 +7,7 @@ export default async function AptitudePage() {
   const items = await getAptitudeSessions();
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="Aptitude"
         description="Quant, logical, and verbal practice with accuracy over time."

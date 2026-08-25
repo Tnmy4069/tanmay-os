@@ -2,53 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Brain, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Brain,
-  CalendarDays,
-  CheckSquare,
-  Briefcase,
-  Code2,
-  Calculator,
-  GraduationCap,
-  TrendingUp,
-  Box,
-  ShieldAlert,
-  Dumbbell,
-  Heart,
-  BarChart3,
-  Settings,
-  LayoutDashboard,
-  CalendarCheck2,
-  CalendarRange,
-  Menu,
-  X,
-} from "lucide-react";
-
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Today", href: "/today", icon: CalendarDays },
-  { name: "Tasks", href: "/tasks", icon: CheckSquare },
-  { name: "Career", divider: true },
-  { name: "Job Hunt", href: "/career/jobs", icon: Briefcase },
-  { name: "DSA", href: "/career/dsa", icon: Code2 },
-  { name: "Aptitude", href: "/career/aptitude", icon: Calculator },
-  { name: "Education", divider: true },
-  { name: "IIT Madras", href: "/education/iitm", icon: GraduationCap },
-  { name: "Upskilling", href: "/education/upskilling", icon: TrendingUp },
-  { name: "Leadership", divider: true },
-  { name: "Apthex", href: "/leadership/apthex", icon: Box },
-  { name: "CyberX", href: "/leadership/cyberx", icon: ShieldAlert },
-  { name: "Personal", divider: true },
-  { name: "Fitness", href: "/personal/fitness", icon: Dumbbell },
-  { name: "Personal Life", href: "/personal/life", icon: Heart },
-  { name: "Checklist", href: "/personal/checklist", icon: CalendarCheck2 },
-  { name: "System", divider: true },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Routine", href: "/settings/routine", icon: CalendarRange },
-  { name: "Settings", href: "/settings", icon: Settings },
-];
+import { isNavLink, mobileTabs, navigation } from "@/lib/navigation";
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -56,7 +13,7 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="space-y-0.5 px-2">
       {navigation.map((item, index) => {
-        if (item.divider) {
+        if (!isNavLink(item)) {
           return (
             <div key={`div-${index}`} className="pt-5 pb-1.5">
               <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
@@ -67,15 +24,15 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
         }
 
         const isActive = pathname === item.href;
-        const Icon = item.icon!;
+        const Icon = item.icon;
 
         return (
           <Link
             key={item.name}
-            href={item.href!}
+            href={item.href}
             onClick={onNavigate}
             className={cn(
-              "group flex items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+              "group flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
               isActive
                 ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(45,212,191,0.25)]"
                 : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
@@ -90,47 +47,102 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function isTabActive(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar() {
-  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const tabActive = mobileTabs.some((t) => isTabActive(pathname, t.href));
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = moreOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [moreOpen]);
 
   return (
     <>
-      <header className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/5 bg-background/80 px-4 backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          <span className="font-semibold tracking-tight">Tanmay OS</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-xl p-2 hover:bg-white/5"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </header>
-
-      {open && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setOpen(false)}>
+      {moreOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+          />
           <aside
-            className="absolute left-0 top-0 h-full w-72 bg-card border-r border-white/5 p-0"
-            onClick={(e) => e.stopPropagation()}
+            className="absolute inset-x-0 bottom-0 max-h-[88dvh] rounded-t-3xl border-t border-white/10 bg-card pb-[env(safe-area-inset-bottom)] shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="More"
           >
-            <div className="flex h-14 items-center justify-between border-b border-white/5 px-4">
+            <div className="flex justify-center pt-3">
+              <div className="h-1 w-10 rounded-full bg-white/20" />
+            </div>
+            <div className="flex items-center justify-between px-5 pb-2 pt-1">
               <div className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Tanmay OS</span>
+                <span className="font-semibold tracking-tight">Tanmay OS</span>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="rounded-xl p-2 hover:bg-white/5">
+              <button
+                type="button"
+                onClick={() => setMoreOpen(false)}
+                className="rounded-xl p-2.5 hover:bg-white/5"
+                aria-label="Close"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="h-[calc(100%-3.5rem)] overflow-y-auto py-3">
-              <Nav onNavigate={() => setOpen(false)} />
+            <div className="overflow-y-auto px-1 pb-4" style={{ maxHeight: "calc(88dvh - 4.5rem)" }}>
+              <Nav onNavigate={() => setMoreOpen(false)} />
             </div>
           </aside>
         </div>
       )}
+
+      <nav
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+        aria-label="Primary"
+      >
+        <div className="grid grid-cols-5">
+          {mobileTabs.map((tab) => {
+            const active = isTabActive(pathname, tab.href);
+            const Icon = tab.icon;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", active && "stroke-[2.2]")} />
+                {tab.name}
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+              !tabActive || moreOpen ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Menu className="h-5 w-5" />
+            More
+          </button>
+        </div>
+      </nav>
 
       <aside className="hidden lg:flex h-full w-[260px] flex-col border-r border-white/5 bg-card/70 backdrop-blur-xl">
         <div className="flex h-16 items-center gap-2.5 border-b border-white/5 px-5">

@@ -7,7 +7,7 @@ export default async function IITMPage() {
   const { courses, deadlines } = await getIitmData();
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="IIT Madras"
         description="BS courses, credits, and assignment / quiz / exam deadlines."

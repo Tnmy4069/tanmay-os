@@ -16,7 +16,7 @@ export default async function TasksPage() {
   const otherTasks = tasks.filter((t) => !t.isMustDo);
 
   return (
-    <div className="p-5 sm:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="app-page max-w-5xl">
       <PageHeader
         title="Tasks"
         description="Backlog and must-dos in one place. Check a box to complete."

@@ -156,7 +156,7 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
   return (
     <Dialog open={internalOpen} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="lg:max-w-[600px] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Task" : "Add Task"}</DialogTitle>
           <DialogDescription>

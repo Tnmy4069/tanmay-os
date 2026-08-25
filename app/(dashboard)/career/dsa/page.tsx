@@ -7,7 +7,7 @@ export default async function DSAPage() {
   const items = await getDsaProblems();
 
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader
         title="DSA tracker"
         description="Log problems, topics, and difficulty. Streak counts consecutive solve days."

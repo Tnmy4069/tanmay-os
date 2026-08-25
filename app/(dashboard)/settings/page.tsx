@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function SettingsPage() {
   return (
-    <div className="p-5 sm:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="app-page max-w-7xl">
       <PageHeader title="Settings" description="Account, alerts, and seed data." icon={Settings} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
