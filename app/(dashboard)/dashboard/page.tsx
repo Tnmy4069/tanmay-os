@@ -117,13 +117,30 @@ export default async function DashboardPage() {
                 <p className="text-sm text-muted-foreground rounded-2xl border border-dashed border-white/10 px-4 py-5">
                   Clear. No critical tasks pending.
                 </p>
-              ) : (
-                <ul className="space-y-2">
-                  {mustDoTasks.map((task) => (
-                    <TaskItem key={String(task._id)} task={task} />
-                  ))}
-                </ul>
-              )}
+              ) : (() => {
+                const pending = mustDoTasks.filter((t) => t.status !== "Done");
+                const done = mustDoTasks.filter((t) => t.status === "Done");
+                return (
+                  <ul className="space-y-2">
+                    {pending.map((task) => (
+                      <TaskItem key={String(task._id)} task={task} />
+                    ))}
+                    {done.length > 0 && pending.length > 0 && (
+                      <li className="flex items-center gap-2 py-1">
+                        <div className="h-px flex-1 bg-white/5" />
+                        <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Done</span>
+                        <div className="h-px flex-1 bg-white/5" />
+                      </li>
+                    )}
+                    {done.map((task) => (
+                      <TaskItem key={String(task._id)} task={task} />
+                    ))}
+                    {pending.length === 0 && done.length > 0 && (
+                      <li className="text-sm text-primary/80 font-medium text-center py-1">✓ All done!</li>
+                    )}
+                  </ul>
+                );
+              })()}
             </CardContent>
           </Card>
 
