@@ -90,16 +90,23 @@
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
   }
   button,
   a,
+  img,
   [role="button"] {
     touch-action: manipulation;
+    -webkit-user-drag: none;
   }
   input,
   select,
-  textarea {
+  textarea,
+  [contenteditable="true"] {
     font-size: 16px;
+    user-select: auto;
+    -webkit-user-select: auto;
   }
 }
 
