@@ -4,7 +4,8 @@ import { getScheduleForDay } from "@/services/schedule.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TaskItem } from "@/components/features/TaskItem";
-import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST } from "@/utils/date";
+import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST, TIMEZONE } from "@/utils/date";
+import { formatInTimeZone } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -32,7 +33,9 @@ export default async function DashboardPage() {
   }, 0);
   const workloadPercent = availableMinutes > 0 ? Math.round((plannedMinutes / availableMinutes) * 100) : 0;
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Use IST hours/minutes — server may run in UTC on prod
+  const nowISTStr = formatInTimeZone(now, TIMEZONE, "HH:mm");
+  const currentMinutes = parseTimeToMinutes(nowISTStr);
   let currentBlock = null;
   let nextBlock = null;
 
