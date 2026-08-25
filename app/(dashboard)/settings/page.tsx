@@ -1,11 +1,13 @@
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Settings, User, Bell, Database, Layers } from "lucide-react";
+import { Settings, User, Bell, Database, Layers, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SpaceSettings } from "@/components/features/SpaceSettings";
 import { getSpaceNav } from "@/app/actions/space.actions";
+import { auth } from "@/lib/auth";
+import { LogoutButton } from "@/components/features/LogoutButton";
 
 export default async function SettingsPage() {
-  const cores = await getSpaceNav();
+  const [cores, session] = await Promise.all([getSpaceNav(), auth()]);
 
   return (
     <div className="app-page max-w-3xl">
@@ -26,12 +28,36 @@ export default async function SettingsPage() {
       <div className="grid grid-cols-1 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" /> Profile</CardTitle>
-            <CardDescription>Manage your account information.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" /> Account</CardTitle>
+            <CardDescription>Manage your session and account.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2 border border-dashed rounded-xl">
-              <p className="text-sm">Profile settings coming soon.</p>
+            <div className="flex flex-col gap-4">
+              {session?.user && (
+                <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 px-4 py-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-sm ring-1 ring-primary/20">
+                    {(session.user.name ?? session.user.email ?? "U")[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    {session.user.name && (
+                      <p className="text-sm font-medium truncate">{session.user.name}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <LogOut className="w-4 h-4 text-destructive" />
+                    Sign out
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    You will be redirected to the login page.
+                  </p>
+                </div>
+                <LogoutButton />
+              </div>
             </div>
           </CardContent>
         </Card>
