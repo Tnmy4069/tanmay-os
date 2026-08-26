@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ import {
   type ClientJob,
 } from "@/app/actions/career.actions";
 import { JOB_STATUSES, type JobStatus } from "@/lib/career-constants";
+import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
+import { useOnlineStatus } from "@/lib/offline/hooks";
 
 const STATUS_STYLE: Record<JobStatus, string> = {
   Wishlist: "bg-secondary text-muted-foreground",
@@ -70,6 +72,15 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const online = useOnlineStatus();
+
+  useEffect(() => {
+    if (!online) {
+      getLocalAll<ClientJob>("jobs").then((rows) => {
+        if (rows.length) setJobs(rows);
+      });
+    }
+  }, [online]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { All: jobs.length };
@@ -114,20 +125,57 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
 
   function save() {
     startTransition(async () => {
-      const res = await upsertJobAction({ id: editing?._id, ...form });
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      const payload = { id: editing?._id, ...form };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertJob",
+        payload,
+        onlineFn: () => upsertJobAction(payload),
+        offlineApply: async () => {
+          const row: ClientJob = {
+            _id: editing?._id || crypto.randomUUID(),
+            company: form.company,
+            role: form.role,
+            location: form.location,
+            jobUrl: form.jobUrl,
+            status: form.status,
+            source: form.source,
+            appliedAt: form.appliedAt ? new Date(form.appliedAt).toISOString() : null,
+            nextDate: form.nextDate ? new Date(form.nextDate).toISOString() : null,
+            salary: form.salary,
+            notes: form.notes,
+          };
+          await putLocal("jobs", row);
+          setJobs((prev) => {
+            const idx = prev.findIndex((j) => j._id === row._id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = row;
+              return next;
+            }
+            return [row, ...prev];
+          });
+        },
+      });
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
   function setStatus(job: ClientJob, status: JobStatus) {
     setJobs((prev) => prev.map((j) => (j._id === job._id ? { ...j, status } : j)));
     startTransition(async () => {
-      await updateJobStatusAction(job._id, status);
+      await mutateWithOffline({
+        action: "updateJobStatus",
+        payload: { id: job._id, status },
+        onlineFn: () => updateJobStatusAction(job._id, status),
+        offlineApply: async () => {
+          await putLocal("jobs", { ...job, status });
+        },
+      });
     });
   }
 
@@ -135,7 +183,14 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
     if (!confirm("Delete this application?")) return;
     setJobs((prev) => prev.filter((j) => j._id !== id));
     startTransition(async () => {
-      await deleteJobAction(id);
+      await mutateWithOffline({
+        action: "deleteJob",
+        payload: { id },
+        onlineFn: () => deleteJobAction(id),
+        offlineApply: async () => {
+          await deleteLocal("jobs", id);
+        },
+      });
     });
   }
 

@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/layout/EmptyState";
 import { deleteAptitudeAction, upsertAptitudeAction, type ClientAptitude } from "@/app/actions/career.actions";
 import { APTITUDE_CATEGORIES } from "@/lib/career-constants";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -77,7 +78,7 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
 
   function save() {
     startTransition(async () => {
-      const res = await upsertAptitudeAction({
+      const payload = {
         category: form.category,
         topic: form.topic,
         attempted: Number(form.attempted),
@@ -85,13 +86,34 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
         minutes: form.minutes ? Number(form.minutes) : undefined,
         notes: form.notes,
         sessionDate: form.sessionDate,
+      };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertAptitude",
+        payload,
+        onlineFn: () => upsertAptitudeAction(payload),
+        offlineApply: async () => {
+          const row: ClientAptitude = {
+            _id: crypto.randomUUID(),
+            category: form.category,
+            topic: form.topic,
+            attempted: Number(form.attempted),
+            correct: Number(form.correct),
+            minutes: form.minutes ? Number(form.minutes) : 0,
+            notes: form.notes,
+            sessionDate: form.sessionDate
+              ? new Date(form.sessionDate).toISOString()
+              : new Date().toISOString(),
+          };
+          await putLocal("aptitude", row);
+          setItems((prev) => [row, ...prev]);
+        },
       });
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
@@ -99,7 +121,14 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
     if (!confirm("Delete this session?")) return;
     setItems((prev) => prev.filter((s) => s._id !== id));
     startTransition(async () => {
-      await deleteAptitudeAction(id);
+      await mutateWithOffline({
+        action: "deleteAptitude",
+        payload: { id },
+        onlineFn: () => deleteAptitudeAction(id),
+        offlineApply: async () => {
+          await deleteLocal("aptitude", id);
+        },
+      });
     });
   }
 

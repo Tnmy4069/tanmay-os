@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { ChevronLeft, ChevronRight, Check, Flame } from "lucide-react";
 import { getMonthCheckins, saveWorkLogsAction } from "@/app/actions/checkin.actions";
+import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
 import {
   Dialog,
   DialogContent,
@@ -186,7 +187,20 @@ export function MonthlyChecklist({
     setSelectedDate(null);
 
     startTransition(async () => {
-      await saveWorkLogsAction(`${dateStr}T00:00:00+05:30`, logs);
+      await mutateWithOffline({
+        action: "saveWorkLogs",
+        payload: { dateStr: `${dateStr}T00:00:00+05:30`, workLogs: logs },
+        onlineFn: () => saveWorkLogsAction(`${dateStr}T00:00:00+05:30`, logs),
+        offlineApply: async () => {
+          await putLocal("checkins", {
+            _id: `local-${dateStr}`,
+            date: `${dateStr}T00:00:00.000Z`,
+            followedRoutine: complete,
+            notes: "",
+            workLogs: logs,
+          });
+        },
+      });
     });
   }
 

@@ -1,5 +1,13 @@
-const CACHE = "tanmay-os-v1";
-const PRECACHE = ["/", "/dashboard", "/login", "/manifest.webmanifest"];
+const CACHE = "tanmay-os-offline-v1";
+const PRECACHE = [
+  "/",
+  "/login",
+  "/dashboard",
+  "/today",
+  "/tasks",
+  "/settings",
+  "/manifest.webmanifest",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -23,11 +31,32 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth")) return;
+
+  // Never cache auth endpoints
+  if (url.pathname.startsWith("/api/auth") || url.pathname.startsWith("/auth")) return;
+
+  // Sync APIs should always hit network when possible
+  if (url.pathname.startsWith("/api/sync")) return;
 
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).catch(() => caches.match("/login").then((cached) => cached || caches.match("/")))
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(async () => {
+          const exact = await caches.match(req);
+          if (exact) return exact;
+          const dash = await caches.match("/dashboard");
+          if (dash) return dash;
+          const login = await caches.match("/login");
+          if (login) return login;
+          return caches.match("/");
+        })
     );
     return;
   }
@@ -36,7 +65,12 @@ self.addEventListener("fetch", (event) => {
     caches.match(req).then((cached) => {
       const fresh = fetch(req)
         .then((res) => {
-          if (res.ok && (url.pathname.startsWith("/pwa-icon/") || url.pathname.match(/\.(js|css|woff2|png|svg|webp)$/))) {
+          if (
+            res.ok &&
+            (url.pathname.startsWith("/pwa-icon/") ||
+              url.pathname.match(/\.(js|css|woff2|png|svg|webp|ico)$/) ||
+              url.pathname === "/manifest.webmanifest")
+          ) {
             const copy = res.clone();
             caches.open(CACHE).then((cache) => cache.put(req, copy));
           }

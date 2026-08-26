@@ -39,6 +39,7 @@ import {
   type LeadershipEventType,
   type LeadershipTaskStatus,
 } from "@/lib/leadership-constants";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -116,12 +117,33 @@ export function LeadershipHub({
     notes: "",
   });
 
-  function reloadAfter(ok: boolean, message?: string) {
-    if (!ok) {
+  function reloadAfter(ok: boolean, message?: string, offline?: boolean) {
+    if (!offline && !ok) {
       setError(message || "Could not save");
       return;
     }
-    window.location.reload();
+    if (!offline) window.location.reload();
+  }
+
+  async function saveOfflineAware(
+    action: string,
+    payload: any,
+    onlineFn: () => Promise<{ success: boolean; message?: string }>,
+    offlineApply?: () => Promise<void>
+  ) {
+    const { result, offline } = await mutateWithOffline({
+      action,
+      payload,
+      onlineFn,
+      offlineApply,
+    });
+    reloadAfter(Boolean(result?.success), result?.message, offline);
+    if (offline) {
+      setTaskOpen(false);
+      setEventOpen(false);
+      setMemberOpen(false);
+      setCtfOpen(false);
+    }
   }
 
   const tabs: { id: Tab; label: string }[] = [
@@ -190,7 +212,14 @@ export function LeadershipHub({
                         const status = e.target.value as LeadershipTaskStatus;
                         setTasks((prev) => prev.map((x) => (x._id === t._id ? { ...x, status } : x)));
                         startTransition(async () => {
-                          await updateLeadTaskStatusAction(club, t._id, status);
+                          await mutateWithOffline({
+                            action: "updateLeadTaskStatus",
+                            payload: { club, id: t._id, status },
+                            onlineFn: () => updateLeadTaskStatusAction(club, t._id, status),
+                            offlineApply: async () => {
+                              await putLocal("leadTasks", { ...t, status });
+                            },
+                          });
                         });
                       }}
                       className="h-8 rounded-lg border border-border bg-transparent px-2 text-xs"
@@ -203,7 +232,14 @@ export function LeadershipHub({
                       onClick={() => {
                         setTasks((prev) => prev.filter((x) => x._id !== t._id));
                         startTransition(async () => {
-                          await deleteLeadTaskAction(club, t._id);
+                          await mutateWithOffline({
+                            action: "deleteLeadTask",
+                            payload: { club, id: t._id },
+                            onlineFn: () => deleteLeadTaskAction(club, t._id),
+                            offlineApply: async () => {
+                              await deleteLocal("leadTasks", t._id);
+                            },
+                          });
                         });
                       }}
                       className="p-2 text-destructive"
@@ -258,7 +294,14 @@ export function LeadershipHub({
                     onClick={() => {
                       setEvents((prev) => prev.filter((x) => x._id !== e._id));
                       startTransition(async () => {
-                        await deleteLeadEventAction(club, e._id);
+                        await mutateWithOffline({
+                          action: "deleteLeadEvent",
+                          payload: { club, id: e._id },
+                          onlineFn: () => deleteLeadEventAction(club, e._id),
+                          offlineApply: async () => {
+                            await deleteLocal("leadEvents", e._id);
+                          },
+                        });
                       });
                     }}
                     className="text-xs text-destructive"
@@ -300,7 +343,14 @@ export function LeadershipHub({
                     onClick={() => {
                       setMembers((prev) => prev.filter((x) => x._id !== m._id));
                       startTransition(async () => {
-                        await deleteLeadMemberAction(club, m._id);
+                        await mutateWithOffline({
+                          action: "deleteLeadMember",
+                          payload: { club, id: m._id },
+                          onlineFn: () => deleteLeadMemberAction(club, m._id),
+                          offlineApply: async () => {
+                            await deleteLocal("leadMembers", m._id);
+                          },
+                        });
                       });
                     }}
                     className="text-xs text-destructive mt-2"
@@ -354,7 +404,14 @@ export function LeadershipHub({
                     onClick={() => {
                       setCtfs((prev) => prev.filter((x) => x._id !== c._id));
                       startTransition(async () => {
-                        await deleteCtfAction(c._id);
+                        await mutateWithOffline({
+                          action: "deleteCtf",
+                          payload: { id: c._id },
+                          onlineFn: () => deleteCtfAction(c._id),
+                          offlineApply: async () => {
+                            await deleteLocal("ctfs", c._id);
+                          },
+                        });
                       });
                     }}
                     className="p-2 text-destructive"
@@ -406,8 +463,19 @@ export function LeadershipHub({
               disabled={isPending}
               onClick={() =>
                 startTransition(async () => {
-                  const res = await upsertLeadTaskAction({ club, ...taskForm });
-                  reloadAfter(res.success, res.message);
+                  const payload = { club, ...taskForm };
+                  await saveOfflineAware("upsertLeadTask", payload, () => upsertLeadTaskAction(payload), async () => {
+                    const row: ClientLeadTask = {
+                      _id: crypto.randomUUID(),
+                      title: taskForm.title,
+                      owner: taskForm.owner,
+                      status: taskForm.status,
+                      dueDate: taskForm.dueDate ? new Date(taskForm.dueDate).toISOString() : null,
+                      notes: taskForm.notes,
+                    };
+                    await putLocal("leadTasks", row);
+                    setTasks((prev) => [row, ...prev]);
+                  });
                 })
               }
             >
@@ -463,8 +531,22 @@ export function LeadershipHub({
               disabled={isPending}
               onClick={() =>
                 startTransition(async () => {
-                  const res = await upsertLeadEventAction({ club, ...eventForm });
-                  reloadAfter(res.success, res.message);
+                  const payload = { club, ...eventForm };
+                  await saveOfflineAware("upsertLeadEvent", payload, () => upsertLeadEventAction(payload), async () => {
+                    const row: ClientLeadEvent = {
+                      _id: crypto.randomUUID(),
+                      title: eventForm.title,
+                      type: eventForm.type,
+                      eventDate: eventForm.eventDate
+                        ? new Date(eventForm.eventDate).toISOString()
+                        : new Date().toISOString(),
+                      location: eventForm.location,
+                      status: eventForm.status,
+                      notes: eventForm.notes,
+                    };
+                    await putLocal("leadEvents", row);
+                    setEvents((prev) => [row, ...prev]);
+                  });
                 })
               }
             >
@@ -504,8 +586,23 @@ export function LeadershipHub({
               disabled={isPending}
               onClick={() =>
                 startTransition(async () => {
-                  const res = await upsertLeadMemberAction({ club, ...memberForm });
-                  reloadAfter(res.success, res.message);
+                  const payload = { club, ...memberForm };
+                  await saveOfflineAware(
+                    "upsertLeadMember",
+                    payload,
+                    () => upsertLeadMemberAction(payload),
+                    async () => {
+                      const row: ClientLeadMember = {
+                        _id: crypto.randomUUID(),
+                        name: memberForm.name,
+                        role: memberForm.role,
+                        contact: memberForm.contact,
+                        notes: memberForm.notes,
+                      };
+                      await putLocal("leadMembers", row);
+                      setMembers((prev) => [row, ...prev]);
+                    }
+                  );
                 })
               }
             >
@@ -557,8 +654,21 @@ export function LeadershipHub({
               disabled={isPending}
               onClick={() =>
                 startTransition(async () => {
-                  const res = await upsertCtfAction(ctfForm);
-                  reloadAfter(res.success, res.message);
+                  await saveOfflineAware("upsertCtf", ctfForm, () => upsertCtfAction(ctfForm), async () => {
+                    const row: ClientCtf = {
+                      _id: crypto.randomUUID(),
+                      title: ctfForm.title,
+                      category: ctfForm.category,
+                      platform: ctfForm.platform,
+                      result: ctfForm.result,
+                      eventDate: ctfForm.eventDate
+                        ? new Date(ctfForm.eventDate).toISOString()
+                        : new Date().toISOString(),
+                      notes: ctfForm.notes,
+                    };
+                    await putLocal("ctfs", row);
+                    setCtfs((prev) => [row, ...prev]);
+                  });
                 })
               }
             >

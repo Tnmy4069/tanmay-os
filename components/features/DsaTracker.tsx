@@ -15,6 +15,7 @@ import {
 import { EmptyState } from "@/components/layout/EmptyState";
 import { deleteDsaAction, upsertDsaAction, type ClientDsa } from "@/app/actions/career.actions";
 import { DSA_PLATFORMS, DSA_TOPICS } from "@/lib/career-constants";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 const DIFF_TONE = {
   Easy: "text-emerald-400 bg-emerald-500/10",
@@ -101,16 +102,39 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
 
   function save() {
     startTransition(async () => {
-      const res = await upsertDsaAction({
+      const payload = {
         ...form,
         minutes: form.minutes ? Number(form.minutes) : undefined,
+      };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertDsa",
+        payload,
+        onlineFn: () => upsertDsaAction(payload),
+        offlineApply: async () => {
+          const row: ClientDsa = {
+            _id: crypto.randomUUID(),
+            title: form.title,
+            url: form.url,
+            platform: form.platform,
+            topic: form.topic,
+            difficulty: form.difficulty,
+            status: form.status,
+            minutes: form.minutes ? Number(form.minutes) : 0,
+            notes: form.notes,
+            solvedAt: form.solvedAt
+              ? new Date(form.solvedAt).toISOString()
+              : new Date().toISOString(),
+          };
+          await putLocal("dsa", row);
+          setItems((prev) => [row, ...prev]);
+        },
       });
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
@@ -118,7 +142,14 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
     if (!confirm("Delete this problem log?")) return;
     setItems((prev) => prev.filter((p) => p._id !== id));
     startTransition(async () => {
-      await deleteDsaAction(id);
+      await mutateWithOffline({
+        action: "deleteDsa",
+        payload: { id },
+        onlineFn: () => deleteDsaAction(id),
+        offlineApply: async () => {
+          await deleteLocal("dsa", id);
+        },
+      });
     });
   }
 

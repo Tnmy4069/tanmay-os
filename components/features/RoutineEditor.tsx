@@ -5,6 +5,8 @@ import { Plus, Edit2, Trash2, X, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createScheduleBlockAction, updateScheduleBlockAction, deleteScheduleBlockAction } from "@/app/actions/schedule.actions";
+import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
+import { useOnlineStatus } from "@/lib/offline/hooks";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -55,6 +57,17 @@ export function RoutineEditor({ initialBlocks }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const online = useOnlineStatus();
+
+  useEffect(() => {
+    if (online) {
+      setBlocks(initialBlocks);
+      return;
+    }
+    getLocalAll<Block>("schedule").then((rows) => {
+      if (rows.length) setBlocks(rows);
+    });
+  }, [online, initialBlocks]);
 
   const dayBlocks = blocks
     .filter((b) => b.dayOfWeek === selectedDay)
@@ -100,27 +113,40 @@ export function RoutineEditor({ initialBlocks }: Props) {
 
     setError(null);
     startTransition(async () => {
-      let res;
       if (editingId) {
-        res = await updateScheduleBlockAction(editingId, form);
+        const { result: res, offline } = await mutateWithOffline({
+          action: "updateScheduleBlock",
+          payload: { blockId: editingId, data: form },
+          onlineFn: () => updateScheduleBlockAction(editingId, form),
+          offlineApply: async () => {
+            await putLocal("schedule", { _id: editingId, ...form });
+            setBlocks((prev) => prev.map((b) => (b._id === editingId ? { ...b, ...form } : b)));
+          },
+        });
+        if (!offline && res && !(res as any).success) {
+          setError((res as any).message as string);
+          return;
+        }
+        if (!offline) {
+          setBlocks((prev) => prev.map((b) => (b._id === editingId ? { ...b, ...form } : b)));
+        }
       } else {
-        res = await createScheduleBlockAction(form);
-      }
-
-      if (!res.success) {
-        setError(res.message as string);
-        return;
-      }
-
-      // Optimistic update
-      if (editingId) {
-        setBlocks((prev) =>
-          prev.map((b) => (b._id === editingId ? { ...b, ...form } : b))
-        );
-      } else {
-        // Refresh will happen via revalidatePath; just close for now
-        // In a real app you'd refresh router or re-fetch
-        window.location.reload();
+        const tempId = crypto.randomUUID();
+        const { result: res, offline } = await mutateWithOffline({
+          action: "createScheduleBlock",
+          payload: form,
+          onlineFn: () => createScheduleBlockAction(form),
+          offlineApply: async () => {
+            const row = { _id: tempId, ...form };
+            await putLocal("schedule", row);
+            setBlocks((prev) => [...prev, row as any]);
+          },
+        });
+        if (!offline && res && !(res as any).success) {
+          setError((res as any).message as string);
+          return;
+        }
+        if (!offline) window.location.reload();
       }
       closeForm();
     });
@@ -129,7 +155,14 @@ export function RoutineEditor({ initialBlocks }: Props) {
   function handleDelete(blockId: string) {
     if (!confirm("Delete this block?")) return;
     startTransition(async () => {
-      await deleteScheduleBlockAction(blockId);
+      await mutateWithOffline({
+        action: "deleteScheduleBlock",
+        payload: { blockId },
+        onlineFn: () => deleteScheduleBlockAction(blockId),
+        offlineApply: async () => {
+          await deleteLocal("schedule", blockId);
+        },
+      });
       setBlocks((prev) => prev.filter((b) => b._id !== blockId));
     });
   }

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTaskAction, updateTaskAction, deleteTaskAction } from "@/app/actions/task.actions";
 import { ITask } from "@/models/Task";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 export interface TaskModalProps {
   task?: any;
@@ -102,23 +103,64 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
     } as Partial<ITask>;
 
     try {
-      let res;
       if (isEditing && task._id) {
-        res = await updateTaskAction(task._id.toString(), formData);
-      } else {
-        res = await createTaskAction(formData);
-      }
-
-      if (!res.success) {
-        if (res.error === "SCHEDULE_CONFLICT") {
-          setConflictWarning(res.message as string);
-        } else {
-          setError(res.message as string);
+        const { result: res, offline } = await mutateWithOffline({
+          action: "updateTask",
+          payload: { taskId: task._id.toString(), data: formData },
+          onlineFn: () => updateTaskAction(task._id.toString(), formData),
+          offlineApply: async () => {
+            await putLocal("tasks", {
+              ...task,
+              ...formData,
+              dueDate: formData.dueDate ? new Date(formData.dueDate as Date).toISOString() : null,
+              _id: task._id,
+            });
+          },
+        });
+        if (!offline && res && !(res as any).success) {
+          const r = res as any;
+          if (r.error === "SCHEDULE_CONFLICT") setConflictWarning(r.message as string);
+          else setError(r.message as string);
+          return;
         }
       } else {
-        setInternalOpen(false);
-        onOpenChange?.(false);
+        const tempId = crypto.randomUUID();
+        const { result: res, offline } = await mutateWithOffline({
+          action: "createTask",
+          payload: formData,
+          onlineFn: () => createTaskAction(formData),
+          offlineApply: async () => {
+            await putLocal("tasks", {
+              _id: tempId,
+              title,
+              description,
+              dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+              startTime,
+              endTime,
+              priority,
+              tier,
+              category,
+              energy,
+              status,
+              isMustDo,
+              tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+              notes,
+              estimatedMinutes: null,
+              project: "",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          },
+        });
+        if (!offline && res && !(res as any).success) {
+          const r = res as any;
+          if (r.error === "SCHEDULE_CONFLICT") setConflictWarning(r.message as string);
+          else setError(r.message as string);
+          return;
+        }
       }
+      setInternalOpen(false);
+      onOpenChange?.(false);
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {
@@ -132,7 +174,14 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
     
     setLoading(true);
     try {
-      await deleteTaskAction(task._id.toString());
+      await mutateWithOffline({
+        action: "deleteTask",
+        payload: { taskId: task._id.toString() },
+        onlineFn: () => deleteTaskAction(task._id.toString()),
+        offlineApply: async () => {
+          await deleteLocal("tasks", task._id.toString());
+        },
+      });
       setInternalOpen(false);
       onOpenChange?.(false);
     } catch (err: any) {

@@ -16,6 +16,9 @@ import {
   renameItemAction,
   setItemHiddenAction,
 } from "@/app/actions/space.actions";
+import { mutateWithOffline } from "@/lib/offline/mutate";
+import { offlineDb } from "@/lib/offline/db";
+import { useOnlineStatus } from "@/lib/offline/hooks";
 
 const selectClass =
   "h-11 sm:h-9 rounded-xl border border-input bg-transparent px-3 text-base sm:text-sm";
@@ -27,17 +30,37 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
   const [itemDraft, setItemDraft] = useState<Record<string, { name: string; icon: string }>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const online = useOnlineStatus();
 
   function refresh() {
     window.location.reload();
   }
 
-  function run(fn: () => Promise<void>) {
+  async function persistCores(next: SpaceCore[]) {
+    setCores(next);
+    if (offlineDb) await offlineDb.meta.put({ key: "spacesCores", value: next });
+  }
+
+  function run(
+    action: string,
+    payload: any,
+    onlineFn: () => Promise<any>,
+    applyLocal?: (prev: SpaceCore[]) => SpaceCore[]
+  ) {
     setError(null);
     startTransition(async () => {
       try {
-        await fn();
-        refresh();
+        const { offline } = await mutateWithOffline({
+          action,
+          payload,
+          onlineFn,
+          offlineApply: async () => {
+            if (applyLocal) {
+              await persistCores(applyLocal(cores));
+            }
+          },
+        });
+        if (!offline) refresh();
       } catch (e: any) {
         setError(e?.message || "Could not save");
       }
@@ -47,6 +70,11 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
   return (
     <div className="space-y-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {!online && (
+        <p className="text-xs text-muted-foreground">
+          Offline — space edits are queued and will sync when you reconnect.
+        </p>
+      )}
 
       {cores
         .slice()
@@ -70,7 +98,14 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                       variant="ghost"
                       size="icon"
                       disabled={isPending}
-                      onClick={() => run(() => deleteCoreAction(core.id))}
+                      onClick={() =>
+                        run(
+                          "deleteCore",
+                          { coreId: core.id },
+                          () => deleteCoreAction(core.id),
+                          (prev) => prev.filter((c) => c.id !== core.id)
+                        )
+                      }
                       aria-label="Delete category"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -84,8 +119,12 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                   onBlur={(e) => {
                     const next = e.target.value.trim();
                     if (next && next !== core.name) {
-                      setCores((prev) => prev.map((c) => (c.id === core.id ? { ...c, name: next } : c)));
-                      run(() => renameCoreAction(core.id, next));
+                      run(
+                        "renameCore",
+                        { coreId: core.id, name: next },
+                        () => renameCoreAction(core.id, next),
+                        (prev) => prev.map((c) => (c.id === core.id ? { ...c, name: next } : c))
+                      );
                     }
                   }}
                 />
@@ -107,14 +146,48 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                             className="h-10 sm:h-9"
                             onBlur={(e) => {
                               const next = e.target.value.trim();
-                              if (next && next !== item.name) run(() => renameItemAction(core.id, item.id, next));
+                              if (next && next !== item.name) {
+                                run(
+                                  "renameItem",
+                                  { coreId: core.id, itemId: item.id, name: next },
+                                  () => renameItemAction(core.id, item.id, next),
+                                  (prev) =>
+                                    prev.map((c) =>
+                                      c.id === core.id
+                                        ? {
+                                            ...c,
+                                            items: c.items.map((i) =>
+                                              i.id === item.id ? { ...i, name: next } : i
+                                            ),
+                                          }
+                                        : c
+                                    )
+                                );
+                              }
                             }}
                           />
                           <Button
                             variant="ghost"
                             size="icon"
                             disabled={isPending}
-                            onClick={() => run(() => setItemHiddenAction(core.id, item.id, !item.hidden))}
+                            onClick={() =>
+                              run(
+                                "setItemHidden",
+                                { coreId: core.id, itemId: item.id, hidden: !item.hidden },
+                                () => setItemHiddenAction(core.id, item.id, !item.hidden),
+                                (prev) =>
+                                  prev.map((c) =>
+                                    c.id === core.id
+                                      ? {
+                                          ...c,
+                                          items: c.items.map((i) =>
+                                            i.id === item.id ? { ...i, hidden: !i.hidden } : i
+                                          ),
+                                        }
+                                      : c
+                                  )
+                              )
+                            }
                             aria-label={item.hidden ? "Show" : "Hide"}
                           >
                             {item.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -124,7 +197,19 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                               variant="ghost"
                               size="icon"
                               disabled={isPending}
-                              onClick={() => run(() => deleteItemAction(core.id, item.id))}
+                              onClick={() =>
+                                run(
+                                  "deleteItem",
+                                  { coreId: core.id, itemId: item.id },
+                                  () => deleteItemAction(core.id, item.id),
+                                  (prev) =>
+                                    prev.map((c) =>
+                                      c.id === core.id
+                                        ? { ...c, items: c.items.filter((i) => i.id !== item.id) }
+                                        : c
+                                    )
+                                )
+                              }
                               aria-label="Delete subcategory"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -159,9 +244,32 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
                   <Button
                     disabled={isPending || !draft.name.trim()}
                     onClick={() =>
-                      run(async () => {
-                        await addItemAction(core.id, draft.name, draft.icon);
-                      })
+                      run(
+                        "addItem",
+                        { coreId: core.id, name: draft.name, icon: draft.icon },
+                        () => addItemAction(core.id, draft.name, draft.icon),
+                        (prev) =>
+                          prev.map((c) =>
+                            c.id === core.id
+                              ? {
+                                  ...c,
+                                  items: [
+                                    ...c.items,
+                                    {
+                                      id: crypto.randomUUID(),
+                                      name: draft.name.trim(),
+                                      icon: draft.icon,
+                                      slug: draft.name.trim().toLowerCase().replace(/\s+/g, "-"),
+                                      href: `/s/${c.slug}/${draft.name.trim().toLowerCase().replace(/\s+/g, "-")}`,
+                                      order: c.items.length,
+                                      hidden: false,
+                                      builtIn: false,
+                                    },
+                                  ],
+                                }
+                              : c
+                          )
+                      )
                     }
                   >
                     <Plus className="h-4 w-4 mr-1" />
@@ -194,9 +302,24 @@ export function SpaceSettings({ initialCores }: { initialCores: SpaceCore[] }) {
           <Button
             disabled={isPending || !coreName.trim()}
             onClick={() =>
-              run(async () => {
-                await addCoreAction(coreName, coreIcon);
-              })
+              run(
+                "addCore",
+                { name: coreName, icon: coreIcon },
+                () => addCoreAction(coreName, coreIcon),
+                (prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    name: coreName.trim(),
+                    icon: coreIcon,
+                    slug: coreName.trim().toLowerCase().replace(/\s+/g, "-"),
+                    order: prev.length,
+                    builtIn: false,
+                    hidden: false,
+                    items: [],
+                  },
+                ]
+              )
             }
           >
             <Plus className="h-4 w-4 mr-1" />

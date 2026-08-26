@@ -20,6 +20,7 @@ import {
   type ClientSkillCourse,
 } from "@/app/actions/education.actions";
 import { SKILL_PLATFORMS, SKILL_STATUSES, type SkillStatus } from "@/lib/education-constants";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -93,35 +94,93 @@ export function UpskillTracker({
 
   function save() {
     startTransition(async () => {
-      const res = await upsertSkillCourseAction({
+      const payload = {
         id: editing?._id,
         ...form,
         progress: Number(form.progress),
+      };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertSkillCourse",
+        payload,
+        onlineFn: () => upsertSkillCourseAction(payload),
+        offlineApply: async () => {
+          const row: ClientSkillCourse = {
+            _id: editing?._id || crypto.randomUUID(),
+            title: form.title,
+            platform: form.platform,
+            category: form.category,
+            status: form.status,
+            progress: Number(form.progress),
+            url: form.url,
+            notes: form.notes,
+            hoursLogged: editing?.hoursLogged || 0,
+            lastStudiedAt: editing?.lastStudiedAt || null,
+          };
+          await putLocal("skillCourses", row);
+          setCourses((prev) => {
+            const idx = prev.findIndex((c) => c._id === row._id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = row;
+              return next;
+            }
+            return [row, ...prev];
+          });
+        },
       });
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
   function saveLog() {
     if (!logTarget) return;
     startTransition(async () => {
-      const res = await logSkillHoursAction(
-        logTarget._id,
-        Number(logForm.minutes),
-        logForm.sessionDate,
-        logForm.notes
-      );
-      if (!res.success) {
-        setError(res.message || "Could not log");
+      const payload = {
+        courseId: logTarget._id,
+        minutes: Number(logForm.minutes),
+        sessionDate: logForm.sessionDate,
+        notes: logForm.notes,
+      };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "logSkillHours",
+        payload,
+        onlineFn: () =>
+          logSkillHoursAction(logTarget._id, Number(logForm.minutes), logForm.sessionDate, logForm.notes),
+        offlineApply: async () => {
+          await putLocal("skillSessions", {
+            _id: crypto.randomUUID(),
+            courseId: logTarget._id,
+            minutes: Number(logForm.minutes),
+            sessionDate: logForm.sessionDate
+              ? new Date(logForm.sessionDate).toISOString()
+              : new Date().toISOString(),
+            notes: logForm.notes,
+          });
+          const mins = Number(logForm.minutes) || 0;
+          setCourses((prev) =>
+            prev.map((c) =>
+              c._id === logTarget._id
+                ? {
+                    ...c,
+                    hoursLogged: (c.hoursLogged || 0) + mins / 60,
+                    lastStudiedAt: new Date().toISOString(),
+                  }
+                : c
+            )
+          );
+        },
+      });
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not log");
         return;
       }
       setLogOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
@@ -129,7 +188,14 @@ export function UpskillTracker({
     if (!confirm("Delete this course and its hour logs?")) return;
     setCourses((prev) => prev.filter((c) => c._id !== id));
     startTransition(async () => {
-      await deleteSkillCourseAction(id);
+      await mutateWithOffline({
+        action: "deleteSkillCourse",
+        payload: { id },
+        onlineFn: () => deleteSkillCourseAction(id),
+        offlineApply: async () => {
+          await deleteLocal("skillCourses", id);
+        },
+      });
     });
   }
 

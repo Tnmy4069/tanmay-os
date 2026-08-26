@@ -11,6 +11,7 @@ import { TaskModal } from "@/components/features/TaskModal";
 import { saveWorkLogsAction } from "@/app/actions/checkin.actions";
 import { parseTimeToMinutes } from "@/utils/date";
 import { StatRow } from "@/components/layout/StatRow";
+import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
 
 type Block = {
   _id: string;
@@ -176,8 +177,22 @@ export function TodayView({
       endTime: b.endTime,
       note: logs[b._id] || "",
     }));
+    const dateKey = `${dateStr}T00:00:00+05:30`;
     startTransition(async () => {
-      await saveWorkLogsAction(`${dateStr}T00:00:00+05:30`, payload);
+      await mutateWithOffline({
+        action: "saveWorkLogs",
+        payload: { dateStr: dateKey, workLogs: payload },
+        onlineFn: () => saveWorkLogsAction(dateKey, payload),
+        offlineApply: async () => {
+          await putLocal("checkins", {
+            _id: `local-${dateStr}`,
+            date: new Date(dateKey).toISOString(),
+            followedRoutine: payload.every((l) => l.note.trim()),
+            notes: payload.map((l) => `${l.title}: ${l.note}`).join("\n"),
+            workLogs: payload,
+          });
+        },
+      });
     });
   }
 

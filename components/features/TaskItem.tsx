@@ -5,6 +5,7 @@ import { Check, Clock, Flag } from "lucide-react";
 import { toggleTaskStatusAction } from "@/app/actions/task.actions";
 import { TaskModal } from "./TaskModal";
 import type { ClientTask } from "@/lib/serialize";
+import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
 
 const PRIORITY_TONE: Record<string, string> = {
   "P0 Critical": "text-red-400 bg-red-500/10",
@@ -25,7 +26,14 @@ export function TaskItem({ task }: { task: ClientTask }) {
 
     startTransition(async () => {
       try {
-        await toggleTaskStatusAction(task._id, newStatus);
+        await mutateWithOffline({
+          action: "toggleTaskStatus",
+          payload: { taskId: task._id, status: newStatus },
+          onlineFn: () => toggleTaskStatusAction(task._id, newStatus),
+          offlineApply: async () => {
+            await putLocal("tasks", { ...task, status: newStatus });
+          },
+        });
       } catch {
         setIsDone(isDone);
       }

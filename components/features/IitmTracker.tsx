@@ -30,6 +30,7 @@ import {
   type IitmDeadlineStatus,
   type IitmDeadlineType,
 } from "@/lib/education-constants";
+import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -145,36 +146,99 @@ export function IitmTracker({
 
   function saveCourse() {
     startTransition(async () => {
-      const res = await upsertIitmCourseAction({
+      const payload = {
         id: editingCourse?._id,
         ...courseForm,
         credits: Number(courseForm.credits),
+      };
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertIitmCourse",
+        payload,
+        onlineFn: () => upsertIitmCourseAction(payload),
+        offlineApply: async () => {
+          const row: ClientIitmCourse = {
+            _id: editingCourse?._id || crypto.randomUUID(),
+            title: courseForm.title,
+            code: courseForm.code,
+            term: courseForm.term,
+            credits: Number(courseForm.credits),
+            status: courseForm.status,
+            grade: courseForm.grade,
+            notes: courseForm.notes,
+          };
+          await putLocal("iitmCourses", row);
+          setCourses((prev) => {
+            const idx = prev.findIndex((c) => c._id === row._id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = row;
+              return next;
+            }
+            return [row, ...prev];
+          });
+        },
       });
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setCourseOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
   function saveDeadline() {
     startTransition(async () => {
-      const res = await upsertIitmDeadlineAction(deadlineForm);
-      if (!res.success) {
-        setError(res.message || "Could not save");
+      const { result: res, offline } = await mutateWithOffline({
+        action: "upsertIitmDeadline",
+        payload: deadlineForm,
+        onlineFn: () => upsertIitmDeadlineAction(deadlineForm),
+        offlineApply: async () => {
+          const row: ClientIitmDeadline = {
+            _id: crypto.randomUUID(),
+            courseId: deadlineForm.courseId,
+            title: deadlineForm.title,
+            type: deadlineForm.type,
+            dueDate: deadlineForm.dueDate
+              ? new Date(deadlineForm.dueDate).toISOString()
+              : new Date().toISOString(),
+            status: deadlineForm.status,
+            score: deadlineForm.score || "",
+            notes: deadlineForm.notes || "",
+          };
+          await putLocal("iitmDeadlines", row);
+          setDeadlines((prev) => {
+            const idx = prev.findIndex((d) => d._id === row._id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = row;
+              return next;
+            }
+            return [row, ...prev];
+          });
+        },
+      });
+      if (!offline && res && !(res as any).success) {
+        setError((res as any).message || "Could not save");
         return;
       }
       setDeadlineOpen(false);
-      window.location.reload();
+      if (!offline) window.location.reload();
     });
   }
 
   function setDlStatus(id: string, status: IitmDeadlineStatus) {
     setDeadlines((prev) => prev.map((d) => (d._id === id ? { ...d, status } : d)));
     startTransition(async () => {
-      await updateIitmDeadlineStatusAction(id, status);
+      await mutateWithOffline({
+        action: "updateIitmDeadlineStatus",
+        payload: { id, status },
+        onlineFn: () => updateIitmDeadlineStatusAction(id, status),
+        offlineApply: async () => {
+          const row = deadlines.find((d) => d._id === id);
+          if (row) await putLocal("iitmDeadlines", { ...row, status });
+        },
+      });
     });
   }
 
@@ -183,14 +247,28 @@ export function IitmTracker({
     setCourses((prev) => prev.filter((c) => c._id !== id));
     setDeadlines((prev) => prev.filter((d) => d.courseId !== id));
     startTransition(async () => {
-      await deleteIitmCourseAction(id);
+      await mutateWithOffline({
+        action: "deleteIitmCourse",
+        payload: { id },
+        onlineFn: () => deleteIitmCourseAction(id),
+        offlineApply: async () => {
+          await deleteLocal("iitmCourses", id);
+        },
+      });
     });
   }
 
   function removeDeadline(id: string) {
     setDeadlines((prev) => prev.filter((d) => d._id !== id));
     startTransition(async () => {
-      await deleteIitmDeadlineAction(id);
+      await mutateWithOffline({
+        action: "deleteIitmDeadline",
+        payload: { id },
+        onlineFn: () => deleteIitmDeadlineAction(id),
+        offlineApply: async () => {
+          await deleteLocal("iitmDeadlines", id);
+        },
+      });
     });
   }
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveSpaceNoteAction } from "@/app/actions/space.actions";
+import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
 
 export function CustomSpaceNotes({
   coreSlug,
@@ -16,6 +17,7 @@ export function CustomSpaceNotes({
 }) {
   const [notes, setNotes] = useState(initialNotes);
   const [isPending, startTransition] = useTransition();
+  const [savedOffline, setSavedOffline] = useState(false);
 
   return (
     <div className="space-y-3">
@@ -31,12 +33,27 @@ export function CustomSpaceNotes({
         disabled={isPending}
         onClick={() =>
           startTransition(async () => {
-            await saveSpaceNoteAction(coreSlug, itemSlug, notes);
+            setSavedOffline(false);
+            const { offline } = await mutateWithOffline({
+              action: "saveSpaceNote",
+              payload: { coreSlug, itemSlug, notes },
+              onlineFn: () => saveSpaceNoteAction(coreSlug, itemSlug, notes),
+              offlineApply: async () => {
+                await putLocal("spaceNotes", {
+                  _id: `${coreSlug}/${itemSlug}`,
+                  coreSlug,
+                  itemSlug,
+                  notes,
+                });
+                setSavedOffline(true);
+              },
+            });
+            if (!offline) setSavedOffline(false);
           })
         }
       >
         <Save className="w-4 h-4 mr-2" />
-        {isPending ? "Saving..." : "Save notes"}
+        {isPending ? "Saving..." : savedOffline ? "Saved offline" : "Save notes"}
       </Button>
     </div>
   );
