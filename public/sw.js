@@ -4,7 +4,6 @@ const PRECACHE = [
   "/login",
   "/dashboard",
   "/today",
-  "/tasks",
   "/settings",
   "/manifest.webmanifest",
 ];

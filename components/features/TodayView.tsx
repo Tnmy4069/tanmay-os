@@ -40,7 +40,7 @@ type Props = {
   mustDoTasks: any[];
   shouldDoTasks: any[];
   couldDoTasks: any[];
-  unscheduledTasks: any[];
+  backlogTasks: any[];
 };
 
 const TYPE_DOT: Record<string, string> = {
@@ -95,11 +95,11 @@ export function TodayView({
   blocks,
   workLogs,
   workload,
-  overdueTasks,
-  mustDoTasks,
-  shouldDoTasks,
-  couldDoTasks,
-  unscheduledTasks,
+  overdueTasks = [],
+  mustDoTasks = [],
+  shouldDoTasks = [],
+  couldDoTasks = [],
+  backlogTasks = [],
 }: Props) {
   const [minutes, setMinutes] = useState(istMinutesNow);
   const [clock, setClock] = useState(istClock);
@@ -331,9 +331,7 @@ export function TodayView({
           {couldDoTasks.length > 0 && (
             <TaskColumn title="Could do" description="Only if energy remains" accent="border-l-green-500" empty="" tasks={couldDoTasks} />
           )}
-          {unscheduledTasks.length > 0 && (
-            <TaskColumn title="Unscheduled" description="Inbox without a date" accent="border-l-muted" empty="" tasks={unscheduledTasks} />
-          )}
+          <TaskColumn title="Backlog" description="Everything else" accent="border-l-muted" empty="Backlog is clear." tasks={backlogTasks} />
 
           {workingBlocks.length > 0 && (
             <Card>

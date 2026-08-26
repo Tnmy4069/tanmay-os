@@ -36,7 +36,6 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "Today", short_name: "Today", url: "/today" },
-      { name: "Tasks", short_name: "Tasks", url: "/tasks" },
       { name: "Job Hunt", short_name: "Jobs", url: "/career/jobs" },
     ],
   };

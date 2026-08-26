@@ -83,7 +83,7 @@ export async function createTaskAction(data: Partial<ITask>) {
   
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
   
   return { success: true };
 }
@@ -120,7 +120,7 @@ export async function updateTaskAction(taskId: string, data: Partial<ITask>) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 
   return { success: true };
 }
@@ -134,7 +134,7 @@ export async function deleteTaskAction(taskId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 
   return { success: true };
 }
@@ -156,7 +156,7 @@ export async function toggleTaskStatusAction(taskId: string, status: "Not Starte
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 
   return { success: true };
 }

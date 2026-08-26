@@ -29,7 +29,6 @@ export type NavEntry = NavLink | { name: string; divider: true };
 export const systemNavTop: NavLink[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Today", href: "/today", icon: CalendarDays },
-  { name: "Tasks", href: "/tasks", icon: CheckSquare },
 ];
 
 export const systemNavBottom: NavLink[] = [
@@ -61,7 +60,6 @@ export const navigation: NavEntry[] = [
 export const mobileTabs: NavLink[] = [
   { name: "Home", href: "/dashboard", icon: LayoutDashboard },
   { name: "Today", href: "/today", icon: CalendarDays },
-  { name: "Tasks", href: "/tasks", icon: CheckSquare },
   { name: "Jobs", href: "/career/jobs", icon: Briefcase },
 ];
 

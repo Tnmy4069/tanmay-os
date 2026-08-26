@@ -17,10 +17,7 @@ export async function getTodayMustDoTasks(userId: string): Promise<ClientTask[]>
   const tasks = await Task.find({
     userId,
     isMustDo: true,
-    $or: [
-      { dueDate: { $gte: startOfDay, $lte: endOfDay } },
-      { dueDate: { $exists: false } },
-    ],
+    status: { $nin: ["Done", "Cancelled"] },
   }).lean();
 
   // Done tasks last, then by priority

@@ -78,7 +78,7 @@ export default async function TodayPage() {
       mustDoTasks={mustDoTasks}
       shouldDoTasks={shouldDoTasks}
       couldDoTasks={couldDoTasks}
-      unscheduledTasks={unscheduled.slice(0, 6)}
+      backlogTasks={unscheduled}
     />
   );
 }
