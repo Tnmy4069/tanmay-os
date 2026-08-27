@@ -6,13 +6,17 @@ import {
   Bell,
   CalendarRange,
   Database,
+  KeyRound,
   Layers,
+  Lock,
   LogOut,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LogoutButton } from "@/components/features/LogoutButton";
+import { usePinLock } from "@/components/pin/PinLockProvider";
+import { PinChangePanel } from "@/components/pin/PinChangePanel";
 
 type TabId = "reminders" | "categories" | "account" | "data";
 
@@ -33,6 +37,8 @@ export function SettingsShell({
   categories: ReactNode;
 }) {
   const [tab, setTab] = useState<TabId>("reminders");
+  const [changePinOpen, setChangePinOpen] = useState(false);
+  const { lockApp, isPinConfigured } = usePinLock();
 
   return (
     <div className="space-y-5">
@@ -83,7 +89,7 @@ export function SettingsShell({
 
       {tab === "account" && (
         <section className="space-y-3">
-          <SectionIntro title="Account" hint="Theme and sign out." />
+          <SectionIntro title="Account" hint="Theme, lock, and sign out." />
           {user && (
             <div className="flex items-center gap-3 rounded-3xl bg-primary/10 px-4 py-3.5">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-lg font-black text-primary-foreground">
@@ -104,6 +110,44 @@ export function SettingsShell({
             <ThemeToggle />
           </div>
 
+          {isPinConfigured && (
+            <>
+              <button
+                type="button"
+                onClick={lockApp}
+                className="flex w-full items-center justify-between gap-3 rounded-3xl bg-[color:var(--info)]/15 px-4 py-3.5 text-left transition-transform active:scale-[0.99]"
+              >
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-sm font-extrabold">
+                    <Lock className="h-4 w-4 text-[color:var(--info)]" />
+                    Lock app
+                  </p>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Stay signed in — unlock with your PIN
+                  </p>
+                </div>
+                <span className="text-xs font-extrabold text-[color:var(--info)]">Lock</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setChangePinOpen(true)}
+                className="flex w-full items-center justify-between gap-3 rounded-3xl bg-secondary/80 px-4 py-3.5 text-left transition-transform active:scale-[0.99]"
+              >
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-sm font-extrabold">
+                    <KeyRound className="h-4 w-4 text-primary" />
+                    Change PIN
+                  </p>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Old PIN → new PIN → confirm
+                  </p>
+                </div>
+                <span className="text-xs font-extrabold text-primary">Edit</span>
+              </button>
+            </>
+          )}
+
           <div className="flex items-center justify-between gap-3 rounded-3xl bg-destructive/10 px-4 py-3.5">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-sm font-extrabold text-destructive">
@@ -116,6 +160,8 @@ export function SettingsShell({
           </div>
         </section>
       )}
+
+      {changePinOpen && <PinChangePanel onClose={() => setChangePinOpen(false)} />}
 
       {tab === "data" && (
         <section className="space-y-3">
