@@ -119,7 +119,7 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
   const lockApp = useCallback(() => {
     if (!userId || !hasPinConfigured(userId)) return;
     setAppLocked(userId, true);
-    setPhase("locked");
+    setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
   }, [userId]);
 
   const unlockApp = useCallback(() => {
@@ -127,6 +127,50 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
     setAppLocked(userId, false);
     setPhase("unlocked");
   }, [userId]);
+
+  // Always require PIN after cold start / PWA reopen (don't trust prior "unlocked" flag).
+  useEffect(() => {
+    if (!userId || publicPath) return;
+    if (!hasPinConfigured(userId)) return;
+    setAppLocked(userId, true);
+    setPhase((p) => (p === "setup" ? p : "locked"));
+  }, [userId, publicPath]);
+
+  // Re-lock whenever the tab/PWA goes to background (tab switch, minimize, app switch).
+  useEffect(() => {
+    if (!userId || publicPath) return;
+
+    const lockIfConfigured = () => {
+      if (!hasPinConfigured(userId)) return;
+      setAppLocked(userId, true);
+      setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") lockIfConfigured();
+      else if (document.visibilityState === "visible" && isAppLocked(userId)) {
+        setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
+      }
+    };
+
+    const onPageHide = () => lockIfConfigured();
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) lockIfConfigured();
+    };
+    const onFreeze = () => lockIfConfigured();
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("freeze", onFreeze);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("freeze", onFreeze);
+    };
+  }, [userId, publicPath]);
 
   const onSetupComplete = useCallback(
     async (pin: string) => {
