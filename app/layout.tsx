@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const outfit = Outfit({ subsets: ["latin"] });
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800", "900"],
+  variable: "--font-nunito",
+});
 
 export const metadata: Metadata = {
   title: "Tanmay OS",
@@ -11,7 +15,7 @@ export const metadata: Metadata = {
   applicationName: "Tanmay OS",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Tanmay OS",
   },
   formatDetection: {
@@ -27,7 +31,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b0a10",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7faf5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1410" },
+  ],
 };
 
 export default function RootLayout({
@@ -36,11 +43,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${outfit.className} bg-background text-foreground`}>
-        <Providers>
-          {children}
-        </Providers>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('tanmay-os-theme');if(t==='dark'||(!t&&false)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className={`${nunito.className} ${nunito.variable} bg-background text-foreground`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

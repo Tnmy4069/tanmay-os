@@ -42,6 +42,18 @@ export function getDayOfWeekIST(): number {
   return day === 7 ? 0 : day;
 }
 
+export function getEndOfWeekIST(): Date {
+  const start = getStartOfTodayIST();
+  const day = getDayOfWeekIST(); // 0 = Sunday
+  const daysUntilSunday = day === 0 ? 0 : 7 - day;
+  const dateString = formatInTimeZone(
+    new Date(start.getTime() + daysUntilSunday * 86400000),
+    TIMEZONE,
+    "yyyy-MM-dd"
+  );
+  return toDate(`${dateString}T23:59:59.999`, { timeZone: TIMEZONE });
+}
+
 /**
  * Formats a Date object specifically in IST
  */

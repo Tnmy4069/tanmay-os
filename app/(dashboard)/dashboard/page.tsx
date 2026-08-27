@@ -4,13 +4,15 @@ import { getScheduleForDay } from "@/services/schedule.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TaskItem } from "@/components/features/TaskItem";
-import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST, TIMEZONE } from "@/utils/date";
+import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST, getEndOfWeekIST, TIMEZONE } from "@/utils/date";
 import { formatInTimeZone } from "date-fns-tz";
 import { StatRow } from "@/components/layout/StatRow";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckSquare } from "lucide-react";
 import Link from "next/link";
-import { taskDeadline } from "@/lib/task-dates";
+import { taskDeadline, formatTaskDate } from "@/lib/task-dates";
+import { GameHUD } from "@/components/features/GameHUD";
+import { computeGameStats } from "@/lib/gamification";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -18,12 +20,27 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
   const now = new Date();
+  const todayKey = formatInTimeZone(now, TIMEZONE, "yyyy-MM-dd");
   const todaySchedule = await getScheduleForDay(userId, getDayOfWeekIST());
   const mustDoTasks = await getTodayMustDoTasks(userId);
   const startOfDay = getStartOfTodayIST();
-  const allTasks = await getTasks(userId, { status: { $ne: "Done" } });
+  const [allTasks, doneTasks] = await Promise.all([
+    getTasks(userId, { status: { $ne: "Done" } }),
+    getTasks(userId, { status: "Done" }),
+  ]);
+
+  const gameStats = computeGameStats({
+    allTasks: [...allTasks, ...doneTasks],
+    mustDoTasks,
+    todayKey,
+    activeDayKeys: doneTasks
+      .map((t) => (t.updatedAt ? formatInTimeZone(new Date(t.updatedAt), TIMEZONE, "yyyy-MM-dd") : null))
+      .filter(Boolean) as string[],
+  });
 
   const endOfDay = new Date(startOfDay.getTime() + 86400000);
+  const endOfWeek = getEndOfWeekIST();
+  const pendingCount = allTasks.filter((t) => t.status !== "Cancelled").length;
 
   const overdueTasks = allTasks.filter((t) => {
     const d = taskDeadline(t);
@@ -42,6 +59,19 @@ export default async function DashboardPage() {
     const date = new Date(d);
     return date >= startOfDay && date <= endOfDay;
   });
+
+  const thisWeekUpcoming = allTasks
+    .filter((t) => {
+      const d = taskDeadline(t);
+      if (!d) return false;
+      const date = new Date(d);
+      return date > endOfDay && date <= endOfWeek;
+    })
+    .sort((a, b) => {
+      const da = taskDeadline(a) || "";
+      const db = taskDeadline(b) || "";
+      return da.localeCompare(db);
+    });
 
   const backlogTasks = allTasks.filter((t) => !t.isMustDo && !taskDeadline(t));
 
@@ -76,25 +106,34 @@ export default async function DashboardPage() {
     <div className="app-page max-w-7xl">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{formatIST(now, "EEEE, MMM d")}</p>
-          <h1 className="text-2xl font-semibold tracking-tight truncate">
-            Hey, {session.user.name?.split(" ")[0] || "Tanmay"}
+          <p className="type-caption">{formatIST(now, "EEEE, MMM d")}</p>
+          <h1 className="type-h1 truncate">
+            Hey, {session.user.name?.split(" ")[0] || "Tanmay"}!
           </h1>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">Ready for today&apos;s quest?</p>
         </div>
-        <Badge variant="outline" className="mt-1 max-w-[46%] shrink-0 truncate border-primary/30 text-primary">
+        <Badge variant="success" className="mt-1 max-w-[46%] shrink-0 truncate">
           {currentBlock ? currentBlock.title : "Free time"}
         </Badge>
       </div>
+
+      <GameHUD stats={gameStats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <StatRow
             items={[
               {
+                label: "Pending",
+                value: pendingCount,
+                hint: "Tap to manage all",
+                tone: "primary",
+                href: "/tasks",
+              },
+              {
                 label: "Now",
                 value: currentBlock ? currentBlock.title : "None",
                 hint: currentBlock ? `${currentBlock.startTime}–${currentBlock.endTime}` : "—",
-                tone: "primary",
               },
               {
                 label: "Next",
@@ -106,6 +145,7 @@ export default async function DashboardPage() {
                 value: overdueTasks.length,
                 hint: "Need attention",
                 tone: "danger",
+                href: overdueTasks.length ? "/today" : undefined,
               },
             ]}
           />
@@ -163,6 +203,48 @@ export default async function DashboardPage() {
             </Card>
           )}
 
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base sm:text-lg">This week</CardTitle>
+                  <CardDescription className="hidden sm:block">
+                    Upcoming through {formatIST(endOfWeek, "EEE, MMM d")}
+                  </CardDescription>
+                </div>
+                <Badge variant="secondary">{thisWeekUpcoming.length}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {thisWeekUpcoming.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">
+                  No upcoming tasks for the rest of this week.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {thisWeekUpcoming.slice(0, 8).map((task) => (
+                    <li key={String(task._id)} className="space-y-1">
+                      <TaskItem task={task} />
+                      <p className="pl-11 text-[11px] font-bold text-muted-foreground">
+                        Due {formatTaskDate(taskDeadline(task))}
+                      </p>
+                    </li>
+                  ))}
+                  {thisWeekUpcoming.length > 8 && (
+                    <li className="pt-1 text-center">
+                      <Button variant="link" size="sm" asChild>
+                        <Link href="/tasks">
+                          <CheckSquare className="mr-1 h-4 w-4" />
+                          View all in Tasks
+                        </Link>
+                      </Button>
+                    </li>
+                  )}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
           {backlogTasks.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
@@ -194,9 +276,9 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+              <div className="progress-track">
                 <div
-                  className={`h-full rounded-full ${workloadPercent > 100 ? "bg-destructive" : "bg-primary"}`}
+                  className={`progress-fill ${workloadPercent > 100 ? "bg-destructive" : "bg-primary"}`}
                   style={{ width: `${Math.min(workloadPercent, 100)}%` }}
                 />
               </div>

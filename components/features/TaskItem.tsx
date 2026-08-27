@@ -9,10 +9,10 @@ import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
 import { formatTaskDate, isTaskDateToday, isTaskOverdue, taskDeadline } from "@/lib/task-dates";
 
 const PRIORITY_TONE: Record<string, string> = {
-  "P0 Critical": "text-red-400 bg-red-500/10",
-  "P1 High": "text-orange-400 bg-orange-500/10",
-  "P2 Medium": "text-yellow-400 bg-yellow-500/10",
-  "P3 Low": "text-zinc-400 bg-secondary",
+  "P0 Critical": "text-destructive bg-destructive/10 border-destructive/20",
+  "P1 High": "text-[color:var(--streak)] bg-[color:var(--streak)]/10 border-[color:var(--streak)]/25",
+  "P2 Medium": "text-[color:var(--warning-foreground)] bg-[color:var(--warning)]/25 border-[color:var(--warning)]/40",
+  "P3 Low": "text-muted-foreground bg-secondary border-border",
 };
 
 export function TaskItem({ task }: { task: ClientTask }) {
@@ -49,47 +49,52 @@ export function TaskItem({ task }: { task: ClientTask }) {
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded-2xl border border-border duration-200 ease-out hover:border-primary/30 hover:bg-secondary/40 active:scale-[0.99] cursor-pointer ${
-          isDone ? "opacity-50" : ""
-        } ${notifyToday && !isDone ? "border-primary/40 bg-primary/5" : ""}`}
+        className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-border bg-card p-3.5 min-h-[56px] shadow-[var(--shadow-sm)] duration-200 ease-out hover:border-primary/40 hover:bg-secondary/50 active:translate-y-px ${
+          isDone ? "opacity-55" : ""
+        } ${notifyToday && !isDone ? "border-primary bg-primary/5" : ""}`}
       >
         <button
           onClick={toggleStatus}
           disabled={isPending}
-          className={`flex-shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition-colors
-            ${isDone ? "bg-primary border-primary text-primary-foreground" : "border-border hover:border-primary"}`}
+          aria-label={isDone ? "Mark incomplete" : "Mark complete"}
+          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-colors
+            ${
+              isDone
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border hover:border-primary"
+            }`}
         >
-          {isDone && <Check className="w-3.5 h-3.5" />}
+          {isDone && <Check className="h-4 w-4" strokeWidth={3} />}
         </button>
 
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm truncate ${isDone ? "line-through text-muted-foreground" : ""}`}>
+        <div className="min-w-0 flex-1">
+          <p className={`truncate text-sm font-extrabold ${isDone ? "text-muted-foreground line-through" : ""}`}>
             {task.title}
           </p>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold text-muted-foreground">
             {task.startDate && (
               <span className="inline-flex items-center gap-1">
-                <CalendarRange className="w-3 h-3 shrink-0" />
+                <CalendarRange className="h-3 w-3 shrink-0" />
                 Start {formatTaskDate(task.startDate)}
               </span>
             )}
             {deadline && (
-              <span className={`inline-flex items-center gap-1 ${endOverdue ? "text-amber-400" : ""}`}>
+              <span className={`inline-flex items-center gap-1 ${endOverdue ? "text-[color:var(--streak)]" : ""}`}>
                 End {formatTaskDate(deadline)}
               </span>
             )}
             {task.notifyDate && (
               <span
-                className={`inline-flex items-center gap-1 ${notifyToday && !isDone ? "text-primary font-medium" : ""}`}
+                className={`inline-flex items-center gap-1 ${notifyToday && !isDone ? "text-primary" : ""}`}
               >
-                <Bell className="w-3 h-3 shrink-0" />
+                <Bell className="h-3 w-3 shrink-0" />
                 Notify {formatTaskDate(task.notifyDate)}
                 {notifyToday && !isDone ? " · today" : ""}
               </span>
             )}
             {task.startTime && (
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+                <Clock className="h-3 w-3" />
                 {task.startTime}
                 {task.endTime ? `–${task.endTime}` : ""}
               </span>
@@ -98,15 +103,17 @@ export function TaskItem({ task }: { task: ClientTask }) {
           </div>
         </div>
 
-        <span className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${PRIORITY_TONE[task.priority] || PRIORITY_TONE["P2 Medium"]}`}>
-          <Flag className="w-3 h-3" />
+        <span
+          className={`hidden items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-extrabold sm:inline-flex ${
+            PRIORITY_TONE[task.priority] || PRIORITY_TONE["P2 Medium"]
+          }`}
+        >
+          <Flag className="h-3 w-3" />
           {task.priority.replace("P0 ", "").replace("P1 ", "").replace("P2 ", "").replace("P3 ", "")}
         </span>
       </div>
 
-      {isModalOpen && (
-        <TaskModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} task={task} />
-      )}
+      {isModalOpen && <TaskModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} task={task} />}
     </>
   );
 }

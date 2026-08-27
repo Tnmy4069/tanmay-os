@@ -22,9 +22,15 @@ export interface TaskModalProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
+  /** Defaults applied when creating a new task */
+  defaults?: {
+    isMustDo?: boolean;
+    endDate?: string;
+    startDate?: string;
+  };
 }
 
-export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskModalProps) {
+export function TaskModal({ task, isOpen = false, onOpenChange, trigger, defaults }: TaskModalProps) {
   const isEditing = !!task;
 
   const [title, setTitle] = useState("");
@@ -46,9 +52,14 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [internalOpen, setInternalOpen] = useState(isOpen);
 
   useEffect(() => {
-    if (isOpen) {
+    setInternalOpen(isOpen);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (internalOpen) {
       if (isEditing && task) {
         setTitle(task.title || "");
         setDescription(task.description || "");
@@ -66,10 +77,11 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
         setTags(task.tags ? task.tags.join(", ") : "");
         setNotes(task.notes || "");
       } else {
+        const today = toDateInputValue(new Date().toISOString());
         setTitle("");
         setDescription("");
-        setStartDate(toDateInputValue(new Date().toISOString()));
-        setEndDate("");
+        setStartDate(defaults?.startDate || today);
+        setEndDate(defaults?.endDate || today);
         setNotifyDate("");
         setStartTime("");
         setEndTime("");
@@ -78,14 +90,14 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
         setCategory("General");
         setEnergy("Medium");
         setStatus("Inbox");
-        setIsMustDo(false);
+        setIsMustDo(Boolean(defaults?.isMustDo));
         setTags("");
         setNotes("");
       }
       setError(null);
       setConflictWarning(null);
     }
-  }, [isOpen, task, isEditing]);
+  }, [internalOpen, task, isEditing, defaults?.isMustDo, defaults?.endDate, defaults?.startDate]);
 
   const handleSubmit = async (e: React.FormEvent, override = false) => {
     e.preventDefault();
@@ -210,12 +222,6 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
       setLoading(false);
     }
   };
-
-  const [internalOpen, setInternalOpen] = useState(isOpen);
-
-  useEffect(() => {
-    setInternalOpen(isOpen);
-  }, [isOpen]);
 
   const handleOpenChange = (open: boolean) => {
     setInternalOpen(open);

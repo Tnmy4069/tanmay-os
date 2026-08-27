@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brain, Menu, X } from "lucide-react";
 import { ServerClock } from "@/components/layout/ServerClock";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { mobileTabs, systemNavBottom, systemNavTop } from "@/lib/navigation";
 import { spaceIcon } from "@/lib/space-icons";
@@ -30,11 +31,13 @@ function NavLinkItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "group flex min-h-10 items-center rounded-full px-3 py-2 text-sm font-medium duration-200 ease-out active:scale-[0.98]",
-        isActive ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        "group flex min-h-11 items-center rounded-2xl px-3 py-2 text-sm font-extrabold duration-200 ease-out",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
-      <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
+      <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "opacity-100" : "opacity-70")} />
       {name}
     </Link>
   );
@@ -59,28 +62,27 @@ function CoreNavItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "group flex min-h-10 items-center rounded-full px-3 py-2 text-sm font-medium duration-200 ease-out active:scale-[0.98]",
-        isActive ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        "group flex min-h-11 items-center rounded-2xl px-3 py-2 text-sm font-extrabold duration-200 ease-out",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
       )}
     >
-      <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "opacity-70")} />
+      <Icon className={cn("mr-3 h-4 w-4 flex-shrink-0", isActive ? "opacity-100" : "opacity-70")} />
       {name}
     </Link>
   );
 }
 
-
 function Nav({ cores, onNavigate }: { cores: SpaceCore[]; onNavigate?: () => void }) {
   return (
-    <nav className="space-y-0.5 px-2">
+    <nav className="space-y-1 px-2">
       {systemNavTop.map((item) => (
         <NavLinkItem key={item.href} {...item} onNavigate={onNavigate} />
       ))}
 
-      <div className="pt-5 pb-1.5">
-        <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
-          Spaces
-        </p>
+      <div className="pb-1.5 pt-5">
+        <p className="px-3 type-caption">Spaces</p>
       </div>
       {cores
         .filter((core) => !core.hidden)
@@ -98,10 +100,8 @@ function Nav({ cores, onNavigate }: { cores: SpaceCore[]; onNavigate?: () => voi
           );
         })}
 
-      <div className="pt-5 pb-1.5">
-        <p className="px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.16em]">
-          System
-        </p>
+      <div className="pb-1.5 pt-5">
+        <p className="px-3 type-caption">System</p>
       </div>
       {systemNavBottom.map((item) => (
         <NavLinkItem key={item.href} {...item} onNavigate={onNavigate} />
@@ -109,7 +109,6 @@ function Nav({ cores, onNavigate }: { cores: SpaceCore[]; onNavigate?: () => voi
     </nav>
   );
 }
-
 
 function isTabActive(pathname: string, href: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
@@ -138,32 +137,37 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
         <div className="lg:hidden fixed inset-0 z-50">
           <button
             type="button"
-            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/50"
             aria-label="Close menu"
             onClick={() => setMoreOpen(false)}
           />
           <aside
-            className="absolute inset-x-0 bottom-0 max-h-[88dvh] rounded-t-3xl border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+            className="absolute inset-x-0 bottom-0 max-h-[88dvh] rounded-t-[1.75rem] border-t-2 border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-lg)]"
             role="dialog"
             aria-modal="true"
             aria-label="More"
           >
             <div className="flex justify-center pt-3">
-              <div className="h-1 w-10 rounded-full bg-border" />
+              <div className="h-1.5 w-12 rounded-full bg-border" />
             </div>
             <div className="flex items-center justify-between px-5 pb-2 pt-1">
               <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                <span className="font-semibold tracking-tight">Tanmay OS</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
+                  <Brain className="h-4 w-4" />
+                </div>
+                <span className="font-extrabold tracking-tight">Tanmay OS</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setMoreOpen(false)}
-                className="rounded-full p-2.5 hover:bg-secondary"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(false)}
+                  className="rounded-2xl border-2 border-border p-2.5 hover:bg-secondary"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             <div className="overflow-y-auto px-1 pb-4" style={{ maxHeight: "calc(88dvh - 4.5rem)" }}>
               <Nav cores={cores} onNavigate={() => setMoreOpen(false)} />
@@ -176,7 +180,7 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
       )}
 
       <nav
-        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
         aria-label="Primary"
       >
         <div className="grid grid-cols-5">
@@ -188,11 +192,16 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium duration-200",
+                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-extrabold duration-200",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <span className={cn("flex h-7 w-11 items-center justify-center rounded-full", active && "bg-primary/12")}>
+                <span
+                  className={cn(
+                    "flex h-8 w-12 items-center justify-center rounded-2xl",
+                    active && "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+                  )}
+                >
                   <Icon className="h-5 w-5" />
                 </span>
                 {tab.name}
@@ -203,11 +212,16 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             type="button"
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium duration-200",
+              "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-extrabold duration-200",
               !tabActive || moreOpen ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <span className={cn("flex h-7 w-11 items-center justify-center rounded-full", (!tabActive || moreOpen) && "bg-primary/12")}>
+            <span
+              className={cn(
+                "flex h-8 w-12 items-center justify-center rounded-2xl",
+                (!tabActive || moreOpen) && "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
+              )}
+            >
               <Menu className="h-5 w-5" />
             </span>
             More
@@ -215,15 +229,18 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
         </div>
       </nav>
 
-      <aside className="hidden lg:flex h-full w-[248px] flex-col border-r border-border bg-card/80">
-        <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/12">
-            <Brain className="h-4 w-4 text-primary" />
+      <aside className="hidden h-full w-[260px] flex-col border-r-2 border-border bg-card/90 lg:flex">
+        <div className="flex h-16 items-center justify-between gap-2 border-b-2 border-border px-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
+              <Brain className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-extrabold tracking-tight leading-none">Tanmay OS</p>
+              <p className="mt-1 type-caption truncate">Level up daily</p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold tracking-tight leading-none">Tanmay OS</p>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Personal system</p>
-          </div>
+          <ThemeToggle />
         </div>
         <div className="flex-1 overflow-y-auto py-4">
           <Nav cores={cores} />

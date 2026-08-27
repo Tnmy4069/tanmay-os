@@ -30,7 +30,7 @@ export function OfflineBanner() {
   if (online && !syncing && pending === 0 && !syncedFlash && !lastError) return null;
 
   let message = "";
-  let tone = "bg-amber-500/15 border-amber-500/30 text-amber-100";
+  let tone = "bg-[color:var(--warning)]/20 border-[color:var(--warning)]/40 text-[color:var(--warning-foreground)] border-b-2";
 
   if (!online) {
     message =
@@ -39,16 +39,16 @@ export function OfflineBanner() {
         : "You are offline. Changes will sync when you are back online.";
   } else if (syncing) {
     message = "Syncing…";
-    tone = "bg-primary/15 border-primary/30 text-primary";
+    tone = "bg-primary/15 border-primary/40 text-[color:var(--primary-deep)] dark:text-primary border-b-2";
   } else if (lastError) {
     message = `Sync issue: ${lastError}. Tap to retry.`;
-    tone = "bg-destructive/15 border-destructive/30 text-destructive";
+    tone = "bg-destructive/15 border-destructive/40 text-destructive border-b-2";
   } else if (pending > 0) {
     message = `${pending} change${pending === 1 ? "" : "s"} waiting to sync.`;
-    tone = "bg-amber-500/15 border-amber-500/30 text-amber-100";
+    tone = "bg-[color:var(--warning)]/20 border-[color:var(--warning)]/40 text-[color:var(--warning-foreground)] border-b-2";
   } else if (syncedFlash) {
     message = "All changes synced.";
-    tone = "bg-emerald-500/15 border-emerald-500/30 text-emerald-200";
+    tone = "bg-primary/15 border-primary/40 text-[color:var(--primary-deep)] dark:text-primary border-b-2";
   }
 
   if (!message) return null;

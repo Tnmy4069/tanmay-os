@@ -12,7 +12,7 @@ export function pwaIcon(size: number) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0b0a10",
+          background: "#58cc02",
           borderRadius: size >= 180 ? radius : 0,
         }}
       >
@@ -20,14 +20,14 @@ export function pwaIcon(size: number) {
           style={{
             width: Math.round(size * 0.72),
             height: Math.round(size * 0.72),
-            borderRadius: Math.round(size * 0.2),
-            background: "#7c3aed",
+            borderRadius: Math.round(size * 0.22),
+            background: "#ffffff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#f5f3ff",
+            color: "#46a302",
             fontSize,
-            fontWeight: 700,
+            fontWeight: 800,
             letterSpacing: "-0.06em",
           }}
         >

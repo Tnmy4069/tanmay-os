@@ -235,8 +235,8 @@ export function TodayView({
       )}
 
       {notifyTodayTasks.length > 0 && (
-        <div className="bg-primary/10 border border-primary/30 px-3 py-3 sm:px-4 rounded-2xl">
-          <h3 className="font-semibold text-primary mb-2 text-sm">
+        <div className="rounded-2xl border-2 border-primary/40 bg-primary/10 px-3 py-3 shadow-[var(--shadow-sm)] sm:px-4">
+          <h3 className="mb-2 text-sm font-extrabold text-[color:var(--primary-deep)] dark:text-primary">
             {notifyTodayTasks.length} reminder{notifyTodayTasks.length === 1 ? "" : "s"} today
           </h3>
           <ul className="space-y-2">
@@ -248,8 +248,8 @@ export function TodayView({
       )}
 
       {overdueTasks.length > 0 && (
-        <div className="bg-orange-500/10 border border-orange-500/30 px-3 py-3 sm:px-4 rounded-2xl">
-          <h3 className="font-semibold text-orange-500 mb-2 text-sm">{overdueTasks.length} overdue</h3>
+        <div className="rounded-2xl border-2 border-[color:var(--streak)]/40 bg-[color:var(--streak)]/10 px-3 py-3 shadow-[var(--shadow-sm)] sm:px-4">
+          <h3 className="mb-2 text-sm font-extrabold text-[color:var(--streak)]">{overdueTasks.length} overdue</h3>
           <ul className="space-y-2">
             {overdueTasks.slice(0, 4).map((task) => (
               <TaskItem key={String(task._id)} task={task} />
@@ -341,8 +341,22 @@ export function TodayView({
             </Card>
           )}
 
-          <TaskColumn title="Must do" description="Max 3 critical" accent="border-l-destructive" empty="No must-do tasks. Protect this list." tasks={mustDoTasks} />
-          <TaskColumn title="Due today" description="Should get done today" accent="border-l-yellow-500" empty="Nothing due today besides must-dos." tasks={shouldDoTasks} />
+          <TaskColumn
+            title="Must do"
+            description="Max 3 critical"
+            accent="border-l-destructive"
+            empty="No must-do tasks. Protect this list."
+            tasks={mustDoTasks}
+            addDefaults={{ isMustDo: true, endDate: dateStr, startDate: dateStr }}
+          />
+          <TaskColumn
+            title="Due today"
+            description="Should get done today"
+            accent="border-l-[color:var(--warning)]"
+            empty="Nothing due today besides must-dos."
+            tasks={shouldDoTasks}
+            addDefaults={{ isMustDo: false, endDate: dateStr, startDate: dateStr }}
+          />
           {couldDoTasks.length > 0 && (
             <TaskColumn title="Could do" description="Only if energy remains" accent="border-l-green-500" empty="" tasks={couldDoTasks} />
           )}
@@ -475,21 +489,38 @@ function TaskColumn({
   accent,
   empty,
   tasks,
+  addDefaults,
 }: {
   title: string;
   description: string;
   accent: string;
   empty: string;
   tasks: any[];
+  addDefaults?: { isMustDo?: boolean; endDate?: string; startDate?: string };
 }) {
   return (
     <Card className={`border-l-4 ${accent}`}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base sm:text-lg flex items-center justify-between">
-          {title}
-          <span className="text-xs font-normal text-muted-foreground">{tasks.length}</span>
-        </CardTitle>
-        <CardDescription className="hidden sm:block">{description}</CardDescription>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              {title}
+              <span className="text-xs font-normal text-muted-foreground">{tasks.length}</span>
+            </CardTitle>
+            <CardDescription className="hidden sm:block">{description}</CardDescription>
+          </div>
+          {addDefaults && (
+            <TaskModal
+              defaults={addDefaults}
+              trigger={
+                <Button size="sm" variant="outline" className="shrink-0">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add task
+                </Button>
+              }
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {tasks.length === 0 ? (
