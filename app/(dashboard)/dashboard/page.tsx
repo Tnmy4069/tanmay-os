@@ -10,7 +10,7 @@ import { StatRow } from "@/components/layout/StatRow";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckSquare } from "lucide-react";
 import Link from "next/link";
-import { taskDeadline, formatTaskDate } from "@/lib/task-dates";
+import { taskDeadline } from "@/lib/task-dates";
 import { GameHUD } from "@/components/features/GameHUD";
 import { computeGameStats } from "@/lib/gamification";
 
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
     <div className="app-page max-w-7xl">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="type-caption">{formatIST(now, "EEEE, MMM d, yyyy")}</p>
+          <p className="type-caption">Today · {formatIST(now, "EEEE")}</p>
           <h1 className="type-h1 truncate">
             Hey, {session.user.name?.split(" ")[0] || "Tanmay"}!
           </h1>
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
                 <div>
                   <CardTitle className="text-base sm:text-lg">This week</CardTitle>
                   <CardDescription className="hidden sm:block">
-                    Upcoming through {formatIST(endOfWeek, "EEE, MMM d")}
+                    Upcoming through end of week
                   </CardDescription>
                 </div>
                 <Badge variant="secondary">{thisWeekUpcoming.length}</Badge>
@@ -223,11 +223,8 @@ export default async function DashboardPage() {
               ) : (
                 <ul className="space-y-2">
                   {thisWeekUpcoming.slice(0, 8).map((task) => (
-                    <li key={String(task._id)} className="space-y-1">
+                    <li key={String(task._id)}>
                       <TaskItem task={task} />
-                      <p className="pl-11 text-[11px] font-bold text-muted-foreground">
-                        Due {formatTaskDate(taskDeadline(task))}
-                      </p>
                     </li>
                   ))}
                   {thisWeekUpcoming.length > 8 && (

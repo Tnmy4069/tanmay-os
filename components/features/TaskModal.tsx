@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { createTaskAction, updateTaskAction, deleteTaskAction } from "@/app/actions/task.actions";
 import { ITask } from "@/models/Task";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
-import { parseDateInput, toDateInputValue } from "@/lib/task-dates";
+import { parseDateInput, toDateInputValue, formatStartsLabel, formatDueLabel, formatRemindLabel } from "@/lib/task-dates";
 
 export interface TaskModalProps {
   task?: any;
@@ -262,19 +262,35 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger, default
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Start date</label>
+                <label className="text-sm font-medium">Starts</label>
                 <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                {startDate && (
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {formatStartsLabel(parseDateInput(startDate)?.toISOString())}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">End date</label>
+                <label className="text-sm font-medium">Due</label>
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                {endDate && (
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {formatDueLabel(parseDateInput(endDate)?.toISOString())}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notify date</label>
+                <label className="text-sm font-medium">Remind</label>
                 <Input type="date" value={notifyDate} onChange={(e) => setNotifyDate(e.target.value)} />
-                <p className="text-[11px] text-muted-foreground">When you want a reminder for this task.</p>
+                {notifyDate ? (
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {formatRemindLabel(parseDateInput(notifyDate)?.toISOString())}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">When you want a nudge for this task.</p>
+                )}
               </div>
 
               <div className="space-y-2 flex flex-row items-center justify-between border rounded-md p-2">

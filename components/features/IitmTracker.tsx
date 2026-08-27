@@ -31,6 +31,7 @@ import {
   type IitmDeadlineType,
 } from "@/lib/education-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
+import { formatRelativeDay } from "@/lib/task-dates";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -40,11 +41,7 @@ function dayIST(iso: string) {
 }
 
 function pretty(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    day: "numeric",
-    month: "short",
-  });
+  return formatRelativeDay(iso);
 }
 
 const COURSE_TONE: Record<IitmCourseStatus, string> = {

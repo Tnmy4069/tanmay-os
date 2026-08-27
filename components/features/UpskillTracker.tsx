@@ -21,6 +21,7 @@ import {
 } from "@/app/actions/education.actions";
 import { SKILL_PLATFORMS, SKILL_STATUSES, type SkillStatus } from "@/lib/education-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
+import { formatRelativeDay } from "@/lib/task-dates";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -261,7 +262,7 @@ export function UpskillTracker({
               <p className="text-xs text-muted-foreground">
                 {Math.round(c.hoursLogged * 10) / 10}h logged
                 {c.lastStudiedAt
-                  ? ` · last ${new Date(c.lastStudiedAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}`
+                  ? ` · last ${formatRelativeDay(c.lastStudiedAt)}`
                   : ""}
               </p>
               {c.notes && <p className="text-xs text-muted-foreground line-clamp-2">{c.notes}</p>}

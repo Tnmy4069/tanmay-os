@@ -6,7 +6,7 @@ import { toggleTaskStatusAction } from "@/app/actions/task.actions";
 import { TaskModal } from "./TaskModal";
 import type { ClientTask } from "@/lib/serialize";
 import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
-import { formatTaskDate, isTaskDateToday, isTaskOverdue, taskDeadline } from "@/lib/task-dates";
+import { formatDueLabel, formatRemindLabel, formatStartsLabel, isTaskDateToday, isTaskOverdue, taskDeadline } from "@/lib/task-dates";
 
 const PRIORITY_TONE: Record<string, string> = {
   "P0 Critical": "text-destructive bg-destructive/10 border-destructive/20",
@@ -75,12 +75,12 @@ export function TaskItem({ task }: { task: ClientTask }) {
             {task.startDate && (
               <span className="inline-flex items-center gap-1">
                 <CalendarRange className="h-3 w-3 shrink-0" />
-                Start {formatTaskDate(task.startDate)}
+                {formatStartsLabel(task.startDate)}
               </span>
             )}
             {deadline && (
               <span className={`inline-flex items-center gap-1 ${endOverdue ? "text-[color:var(--streak)]" : ""}`}>
-                End {formatTaskDate(deadline)}
+                {formatDueLabel(deadline)}
               </span>
             )}
             {task.notifyDate && (
@@ -88,8 +88,7 @@ export function TaskItem({ task }: { task: ClientTask }) {
                 className={`inline-flex items-center gap-1 ${notifyToday && !isDone ? "text-primary" : ""}`}
               >
                 <Bell className="h-3 w-3 shrink-0" />
-                Notify {formatTaskDate(task.notifyDate)}
-                {notifyToday && !isDone ? " · today" : ""}
+                {formatRemindLabel(task.notifyDate)}
               </span>
             )}
             {task.startTime && (

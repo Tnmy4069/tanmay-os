@@ -254,7 +254,7 @@
 }
 
 .app-page {
-  @apply mx-auto w-full space-y-4 px-3 pt-3 pb-8 sm:space-y-6 sm:px-6 sm:pt-6 lg:p-8;
+  @apply mx-auto w-full space-y-4 px-3 pt-3 pb-8 sm:space-y-6 sm:px-6 sm:pt-5 lg:p-8 lg:pt-6;
 }
 
 @media (max-width: 1023px) {

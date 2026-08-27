@@ -123,15 +123,15 @@ export function NotificationSettings() {
         onChange={(v) => save({ morningReminder: v })}
       />
       <Toggle
-        label="Notify-date reminders"
-        hint="When a task's notify date is today"
+        label="Remind-day nudges"
+        hint="When a task should remind you today"
         checked={prefs.taskNotifyDates}
         disabled={!prefs.enabled}
         onChange={(v) => save({ taskNotifyDates: v })}
       />
       <Toggle
         label="Overdue alert"
-        hint="Once per day if anything is past end date"
+        hint="Once a day if anything was due yesterday or earlier"
         checked={prefs.overdueAlert}
         disabled={!prefs.enabled}
         onChange={(v) => save({ overdueAlert: v })}

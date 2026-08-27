@@ -23,6 +23,7 @@ import {
 import { JOB_STATUSES, type JobStatus } from "@/lib/career-constants";
 import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
 import { useOnlineStatus } from "@/lib/offline/hooks";
+import { formatRelativeDay } from "@/lib/task-dates";
 
 const STATUS_STYLE: Record<JobStatus, string> = {
   Wishlist: "bg-secondary text-muted-foreground",
@@ -54,11 +55,7 @@ function dateInput(iso: string | null) {
 
 function prettyDate(iso: string | null) {
   if (!iso) return null;
-  return new Date(iso).toLocaleDateString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    day: "numeric",
-    month: "short",
-  });
+  return formatRelativeDay(iso);
 }
 
 const selectClass =
@@ -258,6 +255,7 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
                 {job.location && <p>{job.location}</p>}
                 {job.source && <p>via {job.source}</p>}
                 {job.nextDate && <p className="text-primary">Next: {prettyDate(job.nextDate)}</p>}
+                {job.appliedAt && <p className="text-muted-foreground">Applied {prettyDate(job.appliedAt)}</p>}
                 {job.salary && <p>{job.salary}</p>}
               </div>
               {job.notes && <p className="text-xs text-muted-foreground line-clamp-2">{job.notes}</p>}

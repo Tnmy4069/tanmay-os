@@ -74,7 +74,7 @@ export default async function TodayPage() {
 
   return (
     <TodayView
-      dateLabel={formatIST(new Date(), "EEEE, MMMM d")}
+      dateLabel="Today"
       dateStr={dateStr}
       userName={session.user.name?.split(" ")[0] || "Tanmay"}
       blocks={blocks}
