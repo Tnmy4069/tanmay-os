@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brain, Menu, X } from "lucide-react";
-import { ServerClock } from "@/components/layout/ServerClock";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { mobileTabs, systemNavBottom, systemNavTop } from "@/lib/navigation";
@@ -171,9 +170,6 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             </div>
             <div className="overflow-y-auto px-1 pb-4" style={{ maxHeight: "calc(88dvh - 4.5rem)" }}>
               <Nav cores={cores} onNavigate={() => setMoreOpen(false)} />
-              <div className="pt-2">
-                <ServerClock />
-              </div>
             </div>
           </aside>
         </div>
@@ -245,7 +241,6 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
         <div className="flex-1 overflow-y-auto py-4">
           <Nav cores={cores} />
         </div>
-        <ServerClock />
       </aside>
     </>
   );

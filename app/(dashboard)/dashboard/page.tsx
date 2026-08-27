@@ -106,7 +106,7 @@ export default async function DashboardPage() {
     <div className="app-page max-w-7xl">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="type-caption">{formatIST(now, "EEEE, MMM d")}</p>
+          <p className="type-caption">{formatIST(now, "EEEE, MMM d, yyyy")}</p>
           <h1 className="type-h1 truncate">
             Hey, {session.user.name?.split(" ")[0] || "Tanmay"}!
           </h1>
