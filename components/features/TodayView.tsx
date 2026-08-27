@@ -202,20 +202,23 @@ export function TodayView({
     <div className="app-page max-w-7xl">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">
-            {userName} · {dateLabel} · {clock}
+          <p className="type-caption">
+            {dateLabel} · {clock}
           </p>
-          <h1 className="text-2xl font-semibold tracking-tight">Today</h1>
+          <h1 className="type-h1 truncate">Today&apos;s quest</h1>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground truncate">
+            Let&apos;s go, {userName.split(" ")[0] || "champ"}
+          </p>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
+        <div className="hidden shrink-0 gap-2 sm:flex">
+          <Button variant="outline" size="sm" asChild>
             <Link href="/personal/checklist">Checklist</Link>
           </Button>
           <TaskModal
             trigger={
               <Button size="sm">
-                <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Task</span>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Task
               </Button>
             }
           />
@@ -292,21 +295,27 @@ export function TodayView({
       )}
 
       {blocks.length > 0 && (
-        <div className="-mx-4 px-4 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory [scrollbar-width:none] lg:hidden">
+        <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 snap-x snap-mandatory [scrollbar-width:none] lg:hidden">
           {blocks.map((block) => {
             const isActive = current?._id === block._id;
             return (
               <div
                 key={`m-${block._id}`}
                 ref={isActive ? currentRef : undefined}
-                className={`min-w-[42%] snap-start rounded-2xl border px-3 py-2.5 ${
-                  isActive ? "border-primary/40 bg-primary/10" : "border-border opacity-70"
+                className={`min-w-[44%] snap-start rounded-2xl border-2 px-3 py-3 shadow-[var(--shadow-sm)] ${
+                  isActive
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card opacity-80"
                 }`}
               >
-                <p className="text-[11px] tabular-nums text-muted-foreground">
+                <p className="text-[11px] font-bold tabular-nums text-muted-foreground">
                   {block.startTime} · {block.type}
                 </p>
-                <p className={`text-sm leading-snug line-clamp-2 ${isActive ? "font-semibold text-primary" : "font-medium"}`}>
+                <p
+                  className={`mt-0.5 line-clamp-2 text-sm leading-snug ${
+                    isActive ? "font-extrabold text-primary" : "font-bold"
+                  }`}
+                >
                   {block.title}
                 </p>
               </div>
@@ -513,9 +522,9 @@ function TaskColumn({
             <TaskModal
               defaults={addDefaults}
               trigger={
-                <Button size="sm" variant="outline" className="shrink-0">
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add task
+                <Button size="sm" variant="outline" className="shrink-0 min-h-10">
+                  <Plus className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Add task</span>
                 </Button>
               }
             />

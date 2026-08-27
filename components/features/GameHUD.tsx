@@ -20,25 +20,25 @@ export function GameHUD({ stats, className }: { stats: GameStats; className?: st
   const goalComplete = stats.dailyDone >= stats.dailyGoal && stats.dailyGoal > 0;
 
   return (
-    <Card className={cn("overflow-hidden border-primary/30 bg-[color:var(--primary-soft)]/40 dark:bg-primary/5", className)}>
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="streak" className="gap-1">
+    <Card className={cn("overflow-hidden border-primary/30 bg-[color:var(--primary-soft)]/50 dark:bg-primary/5", className)}>
+      <CardContent className="space-y-3 p-3.5 sm:space-y-4 sm:p-5">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] sm:flex-wrap">
+          <Badge variant="streak" className="shrink-0 gap-1">
             <Flame className="h-3.5 w-3.5" />
-            {stats.streakDays} day streak
+            {stats.streakDays}d streak
           </Badge>
-          <Badge variant="xp" className="gap-1">
+          <Badge variant="xp" className="shrink-0 gap-1">
             <Zap className="h-3.5 w-3.5" />
             {stats.xp} XP
           </Badge>
-          <Badge variant="success" className="gap-1">
+          <Badge variant="success" className="shrink-0 gap-1">
             <Trophy className="h-3.5 w-3.5" />
-            Level {stats.level}
+            Lv {stats.level}
           </Badge>
           {goalComplete && (
-            <Badge variant="warning" className="gap-1">
+            <Badge variant="warning" className="shrink-0 gap-1">
               <Sparkles className="h-3.5 w-3.5" />
-              Daily goal done!
+              Goal done
             </Badge>
           )}
         </div>

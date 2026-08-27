@@ -1,9 +1,10 @@
-const CACHE = "tanmay-os-offline-v1";
+const CACHE = "tanmay-os-offline-v3";
 const PRECACHE = [
   "/",
   "/login",
   "/dashboard",
   "/today",
+  "/tasks",
   "/settings",
   "/manifest.webmanifest",
 ];
@@ -24,6 +25,34 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const raw = event.notification.data && event.notification.data.url;
+  const path = typeof raw === "string" ? raw : "/today";
+  const url = new URL(path, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clientList) => {
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
+          await client.focus();
+          if ("navigate" in client && typeof client.navigate === "function") {
+            try {
+              await client.navigate(url);
+              return;
+            } catch {
+              // fall through to openWindow
+            }
+          }
+          client.postMessage({ type: "NOTIFICATION_NAV", url: path });
+          return;
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -31,10 +60,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never cache auth endpoints
   if (url.pathname.startsWith("/api/auth") || url.pathname.startsWith("/auth")) return;
-
-  // Sync APIs should always hit network when possible
   if (url.pathname.startsWith("/api/sync")) return;
 
   if (req.mode === "navigate") {

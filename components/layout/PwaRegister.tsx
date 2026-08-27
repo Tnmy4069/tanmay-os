@@ -55,17 +55,17 @@ export function PwaRegister() {
   if (!promptEvent && !showIos) return null;
 
   return (
-    <div className="fixed inset-x-3 z-[60] bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 lg:right-4 lg:inset-x-auto lg:w-80 rounded-2xl border border-border bg-card p-3">
+    <div className="fixed inset-x-3 z-[60] bottom-[calc(5.75rem+env(safe-area-inset-bottom))] lg:bottom-4 lg:right-4 lg:inset-x-auto lg:w-80 rounded-3xl border-2 border-border bg-card p-3 shadow-[var(--shadow-md)]">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
           <Download className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Install Tanmay OS</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-sm font-extrabold">Install Tanmay OS</p>
+          <p className="text-xs font-semibold text-muted-foreground mt-0.5">
             {showIos && !promptEvent
               ? "Share → Add to Home Screen for the app view."
-              : "Add it to your home screen. Works like a native app."}
+              : "Add to home screen — feels like a native app + better reminders."}
           </p>
           {promptEvent && (
             <Button size="sm" className="mt-2 w-full" onClick={install}>
@@ -73,7 +73,7 @@ export function PwaRegister() {
             </Button>
           )}
         </div>
-        <button type="button" onClick={dismiss} className="rounded-full p-1.5 hover:bg-secondary" aria-label="Dismiss">
+        <button type="button" onClick={dismiss} className="rounded-full border-2 border-border p-1.5 hover:bg-secondary" aria-label="Dismiss">
           <X className="h-4 w-4" />
         </button>
       </div>

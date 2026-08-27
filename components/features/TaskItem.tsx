@@ -57,14 +57,14 @@ export function TaskItem({ task }: { task: ClientTask }) {
           onClick={toggleStatus}
           disabled={isPending}
           aria-label={isDone ? "Mark incomplete" : "Mark complete"}
-          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-colors
+          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border-2 transition-colors active:scale-95
             ${
               isDone
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "border-primary bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
                 : "border-border hover:border-primary"
             }`}
         >
-          {isDone && <Check className="h-4 w-4" strokeWidth={3} />}
+          {isDone && <Check className="h-5 w-5" strokeWidth={3} />}
         </button>
 
         <div className="min-w-0 flex-1">

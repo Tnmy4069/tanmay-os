@@ -60,6 +60,7 @@ export const navigation: NavEntry[] = [
 export const mobileTabs: NavLink[] = [
   { name: "Home", href: "/dashboard", icon: LayoutDashboard },
   { name: "Today", href: "/today", icon: CalendarDays },
+  { name: "Tasks", href: "/tasks", icon: CheckSquare },
   { name: "Jobs", href: "/career/jobs", icon: Briefcase },
 ];
 

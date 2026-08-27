@@ -25,7 +25,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-dvh flex-col overflow-hidden lg:flex-row">
       <Sidebar cores={cores} />
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain lg:pb-0">
         {children}
       </main>
     </div>

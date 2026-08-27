@@ -254,7 +254,20 @@
 }
 
 .app-page {
-  @apply mx-auto w-full space-y-5 px-4 pt-4 pb-6 sm:space-y-6 sm:px-6 sm:pt-6 lg:p-8;
+  @apply mx-auto w-full space-y-4 px-3 pt-3 pb-8 sm:space-y-6 sm:px-6 sm:pt-6 lg:p-8;
+}
+
+@media (max-width: 1023px) {
+  .app-page {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+  }
+  .type-h1 {
+    font-size: 1.55rem;
+    line-height: 1.15;
+  }
+  .mobile-tabbar {
+    background: transparent;
+  }
 }
 
 .surface {

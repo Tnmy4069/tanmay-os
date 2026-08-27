@@ -180,10 +180,10 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
       )}
 
       <nav
-        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+        className="mobile-tabbar lg:hidden fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]"
         aria-label="Primary"
       >
-        <div className="grid grid-cols-5">
+        <div className="mx-2 mb-2 grid grid-cols-5 gap-0.5 rounded-[1.75rem] border-2 border-border bg-card px-1 py-1.5 shadow-[var(--shadow-md)]">
           {mobileTabs.map((tab) => {
             const active = isTabActive(pathname, tab.href);
             const Icon = tab.icon;
@@ -192,19 +192,19 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-extrabold duration-200",
+                  "flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-2xl text-[10px] font-extrabold duration-200 active:scale-95",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-8 w-12 items-center justify-center rounded-2xl",
+                    "flex h-9 w-12 items-center justify-center rounded-2xl transition-colors",
                     active && "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" strokeWidth={active ? 2.75 : 2.25} />
                 </span>
-                {tab.name}
+                <span className={cn(active ? "text-primary" : "opacity-80")}>{tab.name}</span>
               </Link>
             );
           })}
@@ -212,17 +212,17 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             type="button"
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-extrabold duration-200",
+              "flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-2xl text-[10px] font-extrabold duration-200 active:scale-95",
               !tabActive || moreOpen ? "text-primary" : "text-muted-foreground"
             )}
           >
             <span
               className={cn(
-                "flex h-8 w-12 items-center justify-center rounded-2xl",
+                "flex h-9 w-12 items-center justify-center rounded-2xl",
                 (!tabActive || moreOpen) && "bg-primary text-primary-foreground shadow-[var(--shadow-sm)]"
               )}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" strokeWidth={2.5} />
             </span>
             More
           </button>
