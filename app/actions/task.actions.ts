@@ -58,6 +58,11 @@ export async function getActiveMustDoCount(userId: string, date: Date | string) 
   });
 }
 
+function taskDayForQuery(data: Partial<ITask>, fallback?: Date) {
+  const raw = data.endDate || data.dueDate || data.startDate || fallback;
+  return raw ? new Date(raw) : new Date();
+}
+
 export async function createTaskAction(data: Partial<ITask>) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -65,15 +70,20 @@ export async function createTaskAction(data: Partial<ITask>) {
   const userId = session.user.id;
   await connectToDatabase();
 
+  if (data.endDate && !data.dueDate) data.dueDate = data.endDate;
+  if (!data.endDate && data.dueDate) data.endDate = data.dueDate;
+
+  const day = taskDayForQuery(data);
+
   if (data.isMustDo) {
-    const count = await getActiveMustDoCount(userId, data.dueDate || new Date());
+    const count = await getActiveMustDoCount(userId, day);
     if (count >= 3) {
       return { success: false, error: "MUST_DO_LIMIT", message: "You already have 3 active MUST DO tasks for this day." };
     }
   }
 
   if (data.startTime && data.endTime && !data.overrideScheduleConflict) {
-    const conflict = await checkTaskConflicts(userId, data.startTime, data.endTime, data.dueDate || new Date());
+    const conflict = await checkTaskConflicts(userId, data.startTime, data.endTime, day);
     if (conflict) {
       return { success: false, error: "SCHEDULE_CONFLICT", message: `This task conflicts with fixed block: ${conflict}. Do you want to override?` };
     }
@@ -83,7 +93,7 @@ export async function createTaskAction(data: Partial<ITask>) {
   
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
   
   return { success: true };
 }
@@ -99,14 +109,25 @@ export async function updateTaskAction(taskId: string, data: Partial<ITask>) {
   if (!existingTask) throw new Error("Task not found");
 
   if (data.isMustDo && !existingTask.isMustDo) {
-    const count = await getActiveMustDoCount(userId, data.dueDate || existingTask.dueDate || new Date());
+    const count = await getActiveMustDoCount(
+      userId,
+      taskDayForQuery(data, existingTask.endDate || existingTask.dueDate || existingTask.startDate)
+    );
     if (count >= 3) {
       return { success: false, error: "MUST_DO_LIMIT", message: "You already have 3 active MUST DO tasks for this day." };
     }
   }
 
+  if (data.endDate && !data.dueDate) data.dueDate = data.endDate;
+  if (!data.endDate && data.dueDate) data.endDate = data.dueDate;
+
   if (data.startTime && data.endTime && !data.overrideScheduleConflict) {
-    const conflict = await checkTaskConflicts(userId, data.startTime, data.endTime, data.dueDate || existingTask.dueDate || new Date());
+    const conflict = await checkTaskConflicts(
+      userId,
+      data.startTime,
+      data.endTime,
+      taskDayForQuery(data, existingTask.endDate || existingTask.dueDate || existingTask.startDate)
+    );
     if (conflict) {
       return { success: false, error: "SCHEDULE_CONFLICT", message: `This task conflicts with fixed block: ${conflict}. Do you want to override?` };
     }
@@ -120,7 +141,7 @@ export async function updateTaskAction(taskId: string, data: Partial<ITask>) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
 
   return { success: true };
 }
@@ -134,7 +155,7 @@ export async function deleteTaskAction(taskId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
 
   return { success: true };
 }
@@ -156,7 +177,7 @@ export async function toggleTaskStatusAction(taskId: string, status: "Not Starte
 
   revalidatePath("/dashboard");
   revalidatePath("/today");
-  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
 
   return { success: true };
 }

@@ -6,6 +6,7 @@ import { formatIST, getDayOfWeekIST, getStartOfTodayIST, getEndOfTodayIST } from
 import connectToDatabase from "@/lib/db";
 import DailyCheckin from "@/models/DailyCheckin";
 import { TodayView } from "@/components/features/TodayView";
+import { taskDeadline } from "@/lib/task-dates";
 
 export default async function TodayPage() {
   const session = await auth();
@@ -29,13 +30,22 @@ export default async function TodayPage() {
     })(),
   ]);
 
-  const overdueTasks = openTasks.filter((t) => t.dueDate && new Date(t.dueDate) < startOfDay);
+  const overdueTasks = openTasks.filter((t) => {
+    const d = taskDeadline(t);
+    return d && new Date(d) < startOfDay;
+  });
   const dueToday = openTasks.filter((t) => {
-    if (!t.dueDate) return false;
-    const d = new Date(t.dueDate);
+    const d = taskDeadline(t);
+    if (!d) return false;
+    const date = new Date(d);
+    return date >= startOfDay && date <= endOfDay;
+  });
+  const notifyToday = openTasks.filter((t) => {
+    if (!t.notifyDate) return false;
+    const d = new Date(t.notifyDate);
     return d >= startOfDay && d <= endOfDay;
   });
-  const unscheduled = openTasks.filter((t) => !t.dueDate && !t.isMustDo);
+  const unscheduled = openTasks.filter((t) => !taskDeadline(t) && !t.isMustDo);
 
   const mustDoTasks = openTasks.filter((t) => t.isMustDo);
   const shouldDoTasks = dueToday.filter(
@@ -75,6 +85,7 @@ export default async function TodayPage() {
         isOverloaded: workload.isOverloaded,
       }}
       overdueTasks={overdueTasks}
+      notifyTodayTasks={notifyToday}
       mustDoTasks={mustDoTasks}
       shouldDoTasks={shouldDoTasks}
       couldDoTasks={couldDoTasks}

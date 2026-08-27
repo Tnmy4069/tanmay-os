@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Clock, Flag } from "lucide-react";
+import { Bell, CalendarRange, Check, Clock, Flag } from "lucide-react";
 import { toggleTaskStatusAction } from "@/app/actions/task.actions";
 import { TaskModal } from "./TaskModal";
 import type { ClientTask } from "@/lib/serialize";
 import { mutateWithOffline, putLocal } from "@/lib/offline/mutate";
+import { formatTaskDate, isTaskDateToday, isTaskOverdue, taskDeadline } from "@/lib/task-dates";
 
 const PRIORITY_TONE: Record<string, string> = {
   "P0 Critical": "text-red-400 bg-red-500/10",
@@ -18,6 +19,10 @@ export function TaskItem({ task }: { task: ClientTask }) {
   const [isPending, startTransition] = useTransition();
   const [isDone, setIsDone] = useState(task.status === "Done");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const deadline = taskDeadline(task);
+  const notifyToday = isTaskDateToday(task.notifyDate);
+  const endOverdue = deadline && !isDone && isTaskOverdue(deadline);
 
   const toggleStatus = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,7 +51,7 @@ export function TaskItem({ task }: { task: ClientTask }) {
         onClick={() => setIsModalOpen(true)}
         className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded-2xl border border-border duration-200 ease-out hover:border-primary/30 hover:bg-secondary/40 active:scale-[0.99] cursor-pointer ${
           isDone ? "opacity-50" : ""
-        }`}
+        } ${notifyToday && !isDone ? "border-primary/40 bg-primary/5" : ""}`}
       >
         <button
           onClick={toggleStatus}
@@ -61,7 +66,27 @@ export function TaskItem({ task }: { task: ClientTask }) {
           <p className={`font-medium text-sm truncate ${isDone ? "line-through text-muted-foreground" : ""}`}>
             {task.title}
           </p>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
+            {task.startDate && (
+              <span className="inline-flex items-center gap-1">
+                <CalendarRange className="w-3 h-3 shrink-0" />
+                Start {formatTaskDate(task.startDate)}
+              </span>
+            )}
+            {deadline && (
+              <span className={`inline-flex items-center gap-1 ${endOverdue ? "text-amber-400" : ""}`}>
+                End {formatTaskDate(deadline)}
+              </span>
+            )}
+            {task.notifyDate && (
+              <span
+                className={`inline-flex items-center gap-1 ${notifyToday && !isDone ? "text-primary font-medium" : ""}`}
+              >
+                <Bell className="w-3 h-3 shrink-0" />
+                Notify {formatTaskDate(task.notifyDate)}
+                {notifyToday && !isDone ? " · today" : ""}
+              </span>
+            )}
             {task.startTime && (
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />

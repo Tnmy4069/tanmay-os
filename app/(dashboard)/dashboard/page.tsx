@@ -10,6 +10,7 @@ import { StatRow } from "@/components/layout/StatRow";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { taskDeadline } from "@/lib/task-dates";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -22,19 +23,27 @@ export default async function DashboardPage() {
   const startOfDay = getStartOfTodayIST();
   const allTasks = await getTasks(userId, { status: { $ne: "Done" } });
 
-  const overdueTasks = allTasks.filter((t) => t.dueDate && new Date(t.dueDate) < startOfDay);
-  const todayTasks = allTasks.filter(
-    (t) => !t.dueDate || (new Date(t.dueDate) >= startOfDay && new Date(t.dueDate) <= new Date(startOfDay.getTime() + 86400000))
-  );
+  const endOfDay = new Date(startOfDay.getTime() + 86400000);
+
+  const overdueTasks = allTasks.filter((t) => {
+    const d = taskDeadline(t);
+    return d && new Date(d) < startOfDay;
+  });
+  const todayTasks = allTasks.filter((t) => {
+    const d = taskDeadline(t);
+    if (!d) return true;
+    return new Date(d) >= startOfDay && new Date(d) <= endOfDay;
+  });
 
   const dueTodayTasks = allTasks.filter((t) => {
     if (t.isMustDo) return false;
-    if (!t.dueDate) return false;
-    const d = new Date(t.dueDate);
-    return d >= startOfDay && d <= new Date(startOfDay.getTime() + 86400000);
+    const d = taskDeadline(t);
+    if (!d) return false;
+    const date = new Date(d);
+    return date >= startOfDay && date <= endOfDay;
   });
 
-  const backlogTasks = allTasks.filter((t) => !t.isMustDo && !t.dueDate);
+  const backlogTasks = allTasks.filter((t) => !t.isMustDo && !taskDeadline(t));
 
   const plannedMinutes = todayTasks.reduce((acc, t) => acc + (t.estimatedMinutes || 0), 0);
   const availableFocusBlocks = todaySchedule.filter((b) => b.type === "Focus" || b.type === "Work");
@@ -101,40 +110,42 @@ export default async function DashboardPage() {
             ]}
           />
 
-          {mustDoTasks.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base sm:text-lg">Must do today</CardTitle>
-                <CardDescription className="hidden sm:block">Keep this list at three or fewer.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const pending = mustDoTasks.filter((t) => t.status !== "Done");
-                  const done = mustDoTasks.filter((t) => t.status === "Done");
-                  return (
-                    <ul className="space-y-2">
-                      {pending.map((task) => (
-                        <TaskItem key={String(task._id)} task={task} />
-                      ))}
-                      {done.length > 0 && pending.length > 0 && (
-                        <li className="flex items-center gap-2 py-1">
-                          <div className="h-px flex-1 bg-border" />
-                          <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Done</span>
-                          <div className="h-px flex-1 bg-border" />
-                        </li>
-                      )}
-                      {done.map((task) => (
-                        <TaskItem key={String(task._id)} task={task} />
-                      ))}
-                      {pending.length === 0 && done.length > 0 && (
-                        <li className="text-sm text-primary/80 font-medium text-center py-1">✓ All done!</li>
-                      )}
-                    </ul>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Must do today</CardTitle>
+              <CardDescription className="hidden sm:block">Keep this list at three or fewer.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {mustDoTasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground rounded-2xl border border-dashed border-border px-4 py-5">
+                  Clear. No critical tasks pending.
+                </p>
+              ) : (() => {
+                const pending = mustDoTasks.filter((t) => t.status !== "Done");
+                const done = mustDoTasks.filter((t) => t.status === "Done");
+                return (
+                  <ul className="space-y-2">
+                    {pending.map((task) => (
+                      <TaskItem key={String(task._id)} task={task} />
+                    ))}
+                    {done.length > 0 && pending.length > 0 && (
+                      <li className="flex items-center gap-2 py-1">
+                        <div className="h-px flex-1 bg-border" />
+                        <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Done</span>
+                        <div className="h-px flex-1 bg-border" />
+                      </li>
+                    )}
+                    {done.map((task) => (
+                      <TaskItem key={String(task._id)} task={task} />
+                    ))}
+                    {pending.length === 0 && done.length > 0 && (
+                      <li className="text-sm text-primary/80 font-medium text-center py-1">✓ All done!</li>
+                    )}
+                  </ul>
+                );
+              })()}
+            </CardContent>
+          </Card>
 
           {dueTodayTasks.length > 0 && (
             <Card>

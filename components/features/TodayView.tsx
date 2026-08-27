@@ -37,6 +37,7 @@ type Props = {
   workLogs: WorkLog[];
   workload: { availableMinutes: number; plannedMinutes: number; isOverloaded: boolean };
   overdueTasks: any[];
+  notifyTodayTasks?: any[];
   mustDoTasks: any[];
   shouldDoTasks: any[];
   couldDoTasks: any[];
@@ -96,6 +97,7 @@ export function TodayView({
   workLogs,
   workload,
   overdueTasks = [],
+  notifyTodayTasks = [],
   mustDoTasks = [],
   shouldDoTasks = [],
   couldDoTasks = [],
@@ -229,6 +231,19 @@ export function TodayView({
               {durationLabel(workload.plannedMinutes)} of tasks vs {durationLabel(workload.availableMinutes)} of Work/Focus time.
             </p>
           </div>
+        </div>
+      )}
+
+      {notifyTodayTasks.length > 0 && (
+        <div className="bg-primary/10 border border-primary/30 px-3 py-3 sm:px-4 rounded-2xl">
+          <h3 className="font-semibold text-primary mb-2 text-sm">
+            {notifyTodayTasks.length} reminder{notifyTodayTasks.length === 1 ? "" : "s"} today
+          </h3>
+          <ul className="space-y-2">
+            {notifyTodayTasks.slice(0, 4).map((task) => (
+              <TaskItem key={`notify-${String(task._id)}`} task={task} />
+            ))}
+          </ul>
         </div>
       )}
 

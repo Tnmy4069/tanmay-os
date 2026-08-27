@@ -5,7 +5,7 @@ import { getStartOfTodayIST, getEndOfTodayIST } from "@/utils/date";
 
 export async function getTasks(userId: string, filters: Record<string, unknown> = {}): Promise<ClientTask[]> {
   await connectToDatabase();
-  const tasks = await Task.find({ userId, ...filters }).sort({ dueDate: 1, priority: 1 }).lean();
+  const tasks = await Task.find({ userId, ...filters }).sort({ endDate: 1, dueDate: 1, priority: 1 }).lean();
   return tasks.map(toClientTask);
 }
 
@@ -17,7 +17,11 @@ export async function getTodayMustDoTasks(userId: string): Promise<ClientTask[]>
   const tasks = await Task.find({
     userId,
     isMustDo: true,
-    status: { $nin: ["Done", "Cancelled"] },
+    $or: [
+      { endDate: { $gte: startOfDay, $lte: endOfDay } },
+      { dueDate: { $gte: startOfDay, $lte: endOfDay } },
+      { $and: [{ endDate: { $exists: false } }, { dueDate: { $exists: false } }] },
+    ],
   }).lean();
 
   // Done tasks last, then by priority

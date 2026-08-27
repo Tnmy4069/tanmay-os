@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { createTaskAction, updateTaskAction, deleteTaskAction } from "@/app/actions/task.actions";
 import { ITask } from "@/models/Task";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
+import { parseDateInput, toDateInputValue } from "@/lib/task-dates";
 
 export interface TaskModalProps {
   task?: any;
@@ -28,7 +29,9 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [notifyDate, setNotifyDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [priority, setPriority] = useState("P2 Medium");
@@ -49,7 +52,9 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
       if (isEditing && task) {
         setTitle(task.title || "");
         setDescription(task.description || "");
-        setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+        setStartDate(toDateInputValue(task.startDate));
+        setEndDate(toDateInputValue(task.endDate || task.dueDate));
+        setNotifyDate(toDateInputValue(task.notifyDate));
         setStartTime(task.startTime || "");
         setEndTime(task.endTime || "");
         setPriority(task.priority || "P2 Medium");
@@ -63,7 +68,9 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
       } else {
         setTitle("");
         setDescription("");
-        setDueDate(new Date().toISOString().split("T")[0]);
+        setStartDate(toDateInputValue(new Date().toISOString()));
+        setEndDate("");
+        setNotifyDate("");
         setStartTime("");
         setEndTime("");
         setPriority("P2 Medium");
@@ -85,10 +92,17 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
     setLoading(true);
     setError(null);
 
+    const parsedStart = parseDateInput(startDate);
+    const parsedEnd = parseDateInput(endDate);
+    const parsedNotify = parseDateInput(notifyDate);
+
     const formData = {
       title,
       description,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
+      startDate: parsedStart,
+      endDate: parsedEnd,
+      notifyDate: parsedNotify,
+      dueDate: parsedEnd ?? parsedStart,
       startTime,
       endTime,
       priority,
@@ -112,7 +126,10 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
             await putLocal("tasks", {
               ...task,
               ...formData,
-              dueDate: formData.dueDate ? new Date(formData.dueDate as Date).toISOString() : null,
+              startDate: parsedStart?.toISOString() ?? null,
+              endDate: parsedEnd?.toISOString() ?? null,
+              notifyDate: parsedNotify?.toISOString() ?? null,
+              dueDate: (parsedEnd ?? parsedStart)?.toISOString() ?? null,
               _id: task._id,
             });
           },
@@ -134,7 +151,10 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
               _id: tempId,
               title,
               description,
-              dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+              startDate: parsedStart?.toISOString() ?? null,
+              endDate: parsedEnd?.toISOString() ?? null,
+              notifyDate: parsedNotify?.toISOString() ?? null,
+              dueDate: (parsedEnd ?? parsedStart)?.toISOString() ?? null,
               startTime,
               endTime,
               priority,
@@ -236,11 +256,22 @@ export function TaskModal({ task, isOpen = false, onOpenChange, trigger }: TaskM
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Due Date</label>
-                <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                <label className="text-sm font-medium">Start date</label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
 
-              <div className="space-y-2 flex flex-row items-center justify-between border rounded-md p-2 mt-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">End date</label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Notify date</label>
+                <Input type="date" value={notifyDate} onChange={(e) => setNotifyDate(e.target.value)} />
+                <p className="text-[11px] text-muted-foreground">When you want a reminder for this task.</p>
+              </div>
+
+              <div className="space-y-2 flex flex-row items-center justify-between border rounded-md p-2">
                 <span className="text-sm font-medium">MUST DO Task</span>
                 <input type="checkbox" checked={isMustDo} onChange={e => setIsMustDo(e.target.checked)} className="w-4 h-4 accent-primary" />
               </div>

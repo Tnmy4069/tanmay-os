@@ -10,6 +10,9 @@ export interface ITask extends Document {
   category?: string;
   project?: string;
   dueDate?: Date;
+  startDate?: Date;
+  endDate?: Date;
+  notifyDate?: Date;
   startTime?: string;
   endTime?: string;
   estimatedMinutes?: number;
@@ -49,6 +52,9 @@ const TaskSchema: Schema = new Schema(
     category: { type: String },
     project: { type: String },
     dueDate: { type: Date },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    notifyDate: { type: Date },
     startTime: { type: String }, // e.g., "19:45"
     endTime: { type: String }, // e.g., "20:45"
     estimatedMinutes: { type: Number },
@@ -71,6 +77,8 @@ const TaskSchema: Schema = new Schema(
 
 // Indexes for common queries
 TaskSchema.index({ userId: 1, dueDate: 1 });
+TaskSchema.index({ userId: 1, endDate: 1 });
+TaskSchema.index({ userId: 1, notifyDate: 1 });
 TaskSchema.index({ userId: 1, status: 1 });
 TaskSchema.index({ userId: 1, isMustDo: 1 });
 

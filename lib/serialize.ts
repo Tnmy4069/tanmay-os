@@ -8,6 +8,9 @@ export type ClientTask = {
   category: string;
   project: string;
   dueDate: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  notifyDate: string | null;
   startTime: string;
   endTime: string;
   estimatedMinutes: number | null;
@@ -30,6 +33,9 @@ export function toClientTask(task: any): ClientTask {
     category: String(task.category ?? ""),
     project: String(task.project ?? ""),
     dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
+    startDate: task.startDate ? new Date(task.startDate).toISOString() : null,
+    endDate: task.endDate ? new Date(task.endDate).toISOString() : null,
+    notifyDate: task.notifyDate ? new Date(task.notifyDate).toISOString() : null,
     startTime: String(task.startTime ?? ""),
     endTime: String(task.endTime ?? ""),
     estimatedMinutes: typeof task.estimatedMinutes === "number" ? task.estimatedMinutes : null,
