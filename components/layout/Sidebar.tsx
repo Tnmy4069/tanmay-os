@@ -1,15 +1,27 @@
 "use client";
 
 import type { ComponentType } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Brain, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { mobileTabs, systemNavBottom, systemNavTop } from "@/lib/navigation";
 import { spaceIcon } from "@/lib/space-icons";
 import type { SpaceCore } from "@/lib/spaces";
+
+function BrandMark({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="relative shrink-0 overflow-hidden rounded-2xl border-2 border-border bg-card shadow-[var(--shadow-sm)]"
+      style={{ width: size, height: size }}
+    >
+      <Image src="/logo.png" alt="Tanmay OS" fill className="object-cover" sizes={`${size}px`} priority />
+    </div>
+  );
+}
 
 function NavLinkItem({
   href,
@@ -151,9 +163,7 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
             </div>
             <div className="flex items-center justify-between px-5 pb-2 pt-1">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
-                  <Brain className="h-4 w-4" />
-                </div>
+                <BrandMark size={36} />
                 <span className="font-extrabold tracking-tight">Tanmay OS</span>
               </div>
               <div className="flex items-center gap-1">
@@ -228,9 +238,7 @@ export function Sidebar({ cores }: { cores: SpaceCore[] }) {
       <aside className="hidden h-full w-[260px] flex-col border-r-2 border-border bg-card/90 lg:flex">
         <div className="flex h-16 items-center justify-between gap-2 border-b-2 border-border px-4">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
-              <Brain className="h-5 w-5" />
-            </div>
+            <BrandMark size={40} />
             <div className="min-w-0">
               <p className="truncate font-extrabold tracking-tight leading-none">Tanmay OS</p>
               <p className="mt-1 type-caption truncate">Level up daily</p>

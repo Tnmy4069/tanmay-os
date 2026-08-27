@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
@@ -47,6 +48,8 @@ export const viewport: Viewport = {
   ],
 };
 
+const themeInit = `(function(){try{var t=localStorage.getItem('tanmay-os-theme');if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,14 +57,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('tanmay-os-theme');if(t==='dark'||(!t&&false)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className={`${nunito.className} ${nunito.variable} bg-background text-foreground`}>
+        <Script id="tanmay-os-theme-init" strategy="beforeInteractive">
+          {themeInit}
+        </Script>
         <Providers>{children}</Providers>
       </body>
     </html>

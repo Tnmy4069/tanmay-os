@@ -1,4 +1,11 @@
-const CACHE = "tanmay-os-offline-v3";
+/**
+ * Service worker script body. CACHE embeds a build id so each deploy
+ * produces a byte-different worker and browsers pick up the update.
+ */
+export function buildServiceWorkerScript(version: string): string {
+  const cache = `tanmay-os-offline-${version}`;
+  return `/* tanmay-os sw ${version} */
+const CACHE = ${JSON.stringify(cache)};
 const PRECACHE = [
   "/",
   "/login",
@@ -25,6 +32,12 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const raw = event.notification.data && event.notification.data.url;
@@ -41,7 +54,7 @@ self.addEventListener("notificationclick", (event) => {
               await client.navigate(url);
               return;
             } catch {
-              // fall through to openWindow
+              // fall through
             }
           }
           client.postMessage({ type: "NOTIFICATION_NAV", url: path });
@@ -62,7 +75,10 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname.startsWith("/api/auth") || url.pathname.startsWith("/auth")) return;
   if (url.pathname.startsWith("/api/sync")) return;
+  // Never cache the worker itself
+  if (url.pathname === "/sw.js") return;
 
+  // HTML navigations: network-first so deploys show up immediately
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -86,6 +102,23 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Next.js build assets: network-first (hashed URLs, but avoid sticky stale)
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Icons / static media: cache-first
   event.respondWith(
     caches.match(req).then((cached) => {
       const fresh = fetch(req)
@@ -93,7 +126,7 @@ self.addEventListener("fetch", (event) => {
           if (
             res.ok &&
             (url.pathname.startsWith("/pwa-icon/") ||
-              url.pathname.match(/\.(js|css|woff2|png|svg|webp|ico)$/) ||
+              url.pathname.match(/\\.(js|css|woff2|png|svg|webp|ico)$/) ||
               url.pathname === "/manifest.webmanifest")
           ) {
             const copy = res.clone();
@@ -106,3 +139,16 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+`;
+}
+
+export function resolveSwVersion(): string {
+  const sha =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ||
+    process.env.VERCEL_DEPLOYMENT_ID ||
+    process.env.NEXT_PUBLIC_BUILD_ID;
+  if (sha) return String(sha).slice(0, 12);
+  // Local / non-Vercel: stable so SW doesn't thrash every request
+  return "local";
+}
