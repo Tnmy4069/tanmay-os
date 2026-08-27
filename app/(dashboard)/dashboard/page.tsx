@@ -132,19 +132,21 @@ export default async function DashboardPage() {
               },
               {
                 label: "Now",
-                value: currentBlock ? currentBlock.title : "None",
-                hint: currentBlock ? `${currentBlock.startTime}–${currentBlock.endTime}` : "—",
+                value: currentBlock ? currentBlock.title : "Free",
+                hint: currentBlock ? `${currentBlock.startTime}–${currentBlock.endTime}` : "No active slot",
+                tone: "info",
               },
               {
                 label: "Next",
                 value: nextBlock ? nextBlock.title : "End of day",
                 hint: nextBlock ? `${nextBlock.startTime}–${nextBlock.endTime}` : "—",
+                tone: "next",
               },
               {
                 label: "Overdue",
                 value: overdueTasks.length,
-                hint: "Need attention",
-                tone: "danger",
+                hint: overdueTasks.length ? "Need attention" : "All clear",
+                tone: overdueTasks.length ? "danger" : "default",
                 href: overdueTasks.length ? "/today" : undefined,
               },
             ]}

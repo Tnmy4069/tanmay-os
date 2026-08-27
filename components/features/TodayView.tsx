@@ -267,18 +267,19 @@ export function TodayView({
             label: "Now",
             value: current ? current.title : "Free / between",
             hint: current ? `${current.startTime}–${current.endTime} · ${durationLabel(remaining)} left` : "No active slot",
-            tone: "primary",
+            tone: "info",
           },
           {
             label: "Next",
             value: next ? next.title : "End of day",
             hint: next ? `${next.startTime}–${next.endTime}` : "—",
+            tone: "next",
           },
           {
             label: "Capacity",
             value: `${capacityPct}%`,
             hint: `${durationLabel(workload.plannedMinutes)} / ${durationLabel(workload.availableMinutes)}`,
-            tone: capacityPct > 100 ? "danger" : "default",
+            tone: capacityPct > 100 ? "danger" : "primary",
           },
           {
             label: "Notes",

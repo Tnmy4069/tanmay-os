@@ -73,6 +73,14 @@ export async function createTaskAction(data: Partial<ITask>) {
   if (data.endDate && !data.dueDate) data.dueDate = data.endDate;
   if (!data.endDate && data.dueDate) data.endDate = data.dueDate;
 
+  if (data.startDate && data.endDate) {
+    const s = new Date(data.startDate).getTime();
+    const e = new Date(data.endDate).getTime();
+    if (!Number.isNaN(s) && !Number.isNaN(e) && e < s) {
+      return { success: false, error: "DATE_ORDER", message: "Due date can’t be before start date." };
+    }
+  }
+
   const day = taskDayForQuery(data);
 
   if (data.isMustDo) {
@@ -120,6 +128,16 @@ export async function updateTaskAction(taskId: string, data: Partial<ITask>) {
 
   if (data.endDate && !data.dueDate) data.dueDate = data.endDate;
   if (!data.endDate && data.dueDate) data.endDate = data.dueDate;
+
+  const nextStart = data.startDate ?? existingTask.startDate;
+  const nextEnd = data.endDate ?? existingTask.endDate ?? existingTask.dueDate;
+  if (nextStart && nextEnd) {
+    const s = new Date(nextStart).getTime();
+    const e = new Date(nextEnd).getTime();
+    if (!Number.isNaN(s) && !Number.isNaN(e) && e < s) {
+      return { success: false, error: "DATE_ORDER", message: "Due date can’t be before start date." };
+    }
+  }
 
   if (data.startTime && data.endTime && !data.overrideScheduleConflict) {
     const conflict = await checkTaskConflicts(

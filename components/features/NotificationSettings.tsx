@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   defaultNotifyPrefs,
   getNotifyPrefs,
@@ -12,6 +13,37 @@ import {
   showAppNotification,
   type NotifyPrefs,
 } from "@/lib/notifications";
+
+function Switch({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-40",
+        checked ? "bg-primary" : "bg-border"
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-card shadow-sm transition-transform",
+          checked && "translate-x-5"
+        )}
+      />
+    </button>
+  );
+}
 
 export function NotificationSettings() {
   const [prefs, setPrefs] = useState<NotifyPrefs>(defaultNotifyPrefs);
@@ -36,7 +68,7 @@ export function NotificationSettings() {
       const p = await requestNotificationPermission();
       setPerm(p);
       if (p !== "granted") {
-        setMsg(p === "denied" ? "Permission blocked. Enable it in browser settings." : "Notifications not supported.");
+        setMsg(p === "denied" ? "Blocked in browser settings." : "Not supported here.");
         save({ enabled: false });
         return;
       }
@@ -47,7 +79,7 @@ export function NotificationSettings() {
         tag: "welcome-notify",
         url: "/today",
       });
-      setMsg("Enabled. You'll get reminders on this device.");
+      setMsg("You're set. Reminders will land on this device.");
     } finally {
       setBusy(false);
     }
@@ -55,96 +87,85 @@ export function NotificationSettings() {
 
   function disable() {
     save({ enabled: false });
-    setMsg("Notifications paused on this device.");
+    setMsg("Reminders paused.");
   }
 
-  const Toggle = ({
-    label,
-    hint,
-    checked,
-    onChange,
-    disabled,
-  }: {
-    label: string;
-    hint: string;
-    checked: boolean;
-    onChange: (v: boolean) => void;
-    disabled?: boolean;
-  }) => (
-    <label
-      className={`flex items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 ${
-        disabled ? "opacity-50" : ""
-      }`}
-    >
-      <div className="min-w-0">
-        <p className="text-sm font-extrabold">{label}</p>
-        <p className="text-xs font-semibold text-muted-foreground">{hint}</p>
-      </div>
-      <input
-        type="checkbox"
-        className="h-5 w-5 accent-[color:var(--primary)]"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-    </label>
-  );
+  const on = prefs.enabled && perm === "granted";
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-3 rounded-2xl border-2 border-border bg-secondary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)]">
-            {prefs.enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
-          </div>
-          <div>
-            <p className="font-extrabold">Device reminders</p>
-            <p className="text-xs font-semibold text-muted-foreground">
-              Status: {perm === "granted" ? "allowed" : perm === "denied" ? "blocked" : perm}
-            </p>
-          </div>
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-3 rounded-3xl bg-primary/10 px-4 py-3.5">
+        <span
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
+            on ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+          )}
+        >
+          {on ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-extrabold">{on ? "Reminders on" : "Reminders off"}</p>
+          <p className="text-xs font-semibold text-muted-foreground">
+            {perm === "granted" ? "Allowed" : perm === "denied" ? "Blocked" : "Needs permission"}
+          </p>
         </div>
-        {prefs.enabled && perm === "granted" ? (
-          <Button variant="outline" onClick={disable} disabled={busy} className="w-full sm:w-auto">
-            Turn off
+        {on ? (
+          <Button variant="outline" size="sm" onClick={disable} disabled={busy}>
+            Off
           </Button>
         ) : (
-          <Button onClick={enable} disabled={busy} className="w-full sm:w-auto">
-            {busy ? "Requesting…" : "Enable notifications"}
+          <Button size="sm" onClick={enable} disabled={busy}>
+            {busy ? "…" : "Enable"}
           </Button>
         )}
       </div>
 
-      <Toggle
-        label="Morning quest"
-        hint={`Around ${prefs.morningHour}:00 — start-the-day nudge`}
-        checked={prefs.morningReminder}
-        disabled={!prefs.enabled}
-        onChange={(v) => save({ morningReminder: v })}
-      />
-      <Toggle
-        label="Remind-day nudges"
-        hint="When a task should remind you today"
-        checked={prefs.taskNotifyDates}
-        disabled={!prefs.enabled}
-        onChange={(v) => save({ taskNotifyDates: v })}
-      />
-      <Toggle
-        label="Overdue alert"
-        hint="Once a day if anything was due yesterday or earlier"
-        checked={prefs.overdueAlert}
-        disabled={!prefs.enabled}
-        onChange={(v) => save({ overdueAlert: v })}
-      />
+      {(
+        [
+          {
+            key: "morningReminder" as const,
+            label: "Morning quest",
+            hint: `Around ${prefs.morningHour}:00`,
+          },
+          {
+            key: "taskNotifyDates" as const,
+            label: "Remind-day nudges",
+            hint: "When remind date is today",
+          },
+          {
+            key: "overdueAlert" as const,
+            label: "Overdue alert",
+            hint: "Once a day if anything slipped",
+          },
+        ] as const
+      ).map((row) => (
+        <div
+          key={row.key}
+          className={cn(
+            "flex items-center justify-between gap-3 rounded-3xl bg-secondary/80 px-4 py-3.5",
+            !prefs.enabled && "opacity-50"
+          )}
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-extrabold">{row.label}</p>
+            <p className="text-xs font-semibold text-muted-foreground">{row.hint}</p>
+          </div>
+          <Switch
+            checked={prefs[row.key]}
+            disabled={!prefs.enabled}
+            onChange={(v) => save({ [row.key]: v })}
+          />
+        </div>
+      ))}
 
       {msg && (
-        <p className="flex items-center gap-2 text-sm font-bold text-[color:var(--primary-deep)] dark:text-primary">
+        <p className="flex items-center gap-2 px-1 text-sm font-bold text-[color:var(--primary-deep)] dark:text-primary">
           <Check className="h-4 w-4" />
           {msg}
         </p>
       )}
-      <p className="text-[11px] font-semibold text-muted-foreground">
-        Works best when Tanmay OS is installed as a PWA. Keep the app opened at least once daily so reminders can fire.
+      <p className="px-1 text-[11px] font-semibold text-muted-foreground">
+        Best as an installed app. Open it once a day so nudges can fire.
       </p>
     </div>
   );
