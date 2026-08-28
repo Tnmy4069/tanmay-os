@@ -9,19 +9,22 @@ import { NotificationBoot } from "@/components/layout/NotificationBoot";
 import { MobileTaskFab } from "@/components/layout/MobileTaskFab";
 import { NotifyNudge } from "@/components/layout/NotifyNudge";
 import { PinLockProvider } from "@/components/pin/PinLockProvider";
+import { MobileFabProvider } from "@/lib/mobile-fab-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ThemeProvider>
         <PinLockProvider>
-          <OfflineSyncBoot />
-          <NotificationBoot />
-          <OfflineBanner />
-          {children}
-          <NotifyNudge />
-          <MobileTaskFab />
-          <PwaRegister />
+          <MobileFabProvider>
+            <OfflineSyncBoot />
+            <NotificationBoot />
+            <OfflineBanner />
+            {children}
+            <NotifyNudge />
+            <MobileTaskFab />
+            <PwaRegister />
+          </MobileFabProvider>
         </PinLockProvider>
       </ThemeProvider>
     </SessionProvider>

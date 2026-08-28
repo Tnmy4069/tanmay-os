@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 type WorkLog = {
   blockId: string;
@@ -169,6 +170,14 @@ export function MonthlyChecklist({
     );
     setSelectedDate(dateStr);
   }
+
+  useRegisterMobileFab({
+    label: "Log Today's Checklist",
+    onAction: () => {
+      const dayNum = Number(todayStr.split("-")[2]);
+      openDay(dayNum);
+    },
+  });
 
   function saveDay() {
     if (!selectedDate) return;

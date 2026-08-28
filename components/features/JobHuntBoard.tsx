@@ -44,6 +44,7 @@ import { JOB_STATUSES, type JobStatus } from "@/lib/career-constants";
 import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
 import { useOnlineStatus } from "@/lib/offline/hooks";
 import { formatRelativeDay } from "@/lib/task-dates";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const STATUS_CONFIG: Record<
   JobStatus,
@@ -211,6 +212,11 @@ export function JobHuntBoard({ initialJobs }: { initialJobs: ClientJob[] }) {
     setError(null);
     setOpen(true);
   }
+
+  useRegisterMobileFab({
+    label: "Add Application",
+    onAction: () => openAdd(),
+  });
 
   function openEdit(job: ClientJob) {
     setEditing(job);

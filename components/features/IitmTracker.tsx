@@ -32,6 +32,7 @@ import {
 } from "@/lib/education-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 import { formatRelativeDay } from "@/lib/task-dates";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -125,6 +126,29 @@ export function IitmTracker({
     setError(null);
     setCourseOpen(true);
   }
+
+  function handleFabAdd() {
+    if (courses.length === 0) {
+      openAddCourse();
+    } else {
+      setDeadlineForm({
+        courseId: courses[0]?._id || "",
+        title: "",
+        type: "Assignment",
+        dueDate: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }),
+        status: "Todo",
+        score: "",
+        notes: "",
+      });
+      setError(null);
+      setDeadlineOpen(true);
+    }
+  }
+
+  useRegisterMobileFab({
+    label: "Add Assessment / Course",
+    onAction: handleFabAdd,
+  });
 
   function openEditCourse(c: ClientIitmCourse) {
     setEditingCourse(c);

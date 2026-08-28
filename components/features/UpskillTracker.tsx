@@ -22,6 +22,7 @@ import {
 import { SKILL_PLATFORMS, SKILL_STATUSES, type SkillStatus } from "@/lib/education-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
 import { formatRelativeDay } from "@/lib/task-dates";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -77,6 +78,11 @@ export function UpskillTracker({
     setError(null);
     setOpen(true);
   }
+
+  useRegisterMobileFab({
+    label: "Add Upskill Goal",
+    onAction: openAdd,
+  });
 
   function openEdit(c: ClientSkillCourse) {
     setEditing(c);

@@ -40,8 +40,8 @@ import {
   type LeadershipTaskStatus,
 } from "@/lib/leadership-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
-
 import { formatRelativeDay } from "@/lib/task-dates";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -145,11 +145,50 @@ export function LeadershipHub({
   }
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "tasks", label: "Tasks" },
+    { id: "tasks", label: "Deliverables" },
     { id: "events", label: "Events" },
     { id: "team", label: "Team" },
     ...(showCtf ? [{ id: "ctf" as const, label: "CTF log" }] : []),
   ];
+
+  function handleFabAdd() {
+    if (tab === "tasks") {
+      setTaskForm({ title: "", owner: "", status: "Todo", dueDate: "", notes: "" });
+      setError(null);
+      setTaskOpen(true);
+    } else if (tab === "events") {
+      setEventForm({
+        title: "",
+        type: club === "CyberX" ? "Workshop" : "Meeting",
+        eventDate: today,
+        location: "",
+        status: "Planned",
+        notes: "",
+      });
+      setError(null);
+      setEventOpen(true);
+    } else if (tab === "team") {
+      setMemberForm({ name: "", role: "", contact: "", notes: "" });
+      setError(null);
+      setMemberOpen(true);
+    } else if (tab === "ctf" && showCtf) {
+      setCtfForm({
+        title: "",
+        category: "",
+        platform: "",
+        result: "Attempted",
+        eventDate: today,
+        notes: "",
+      });
+      setError(null);
+      setCtfOpen(true);
+    }
+  }
+
+  useRegisterMobileFab({
+    label: tab === "tasks" ? "Add Deliverable" : tab === "events" ? "Add Event" : tab === "team" ? "Add Team Member" : "Log CTF",
+    onAction: handleFabAdd,
+  });
 
   return (
     <div className="space-y-6">

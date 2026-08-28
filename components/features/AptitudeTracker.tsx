@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/layout/EmptyState";
 import { deleteAptitudeAction, upsertAptitudeAction, type ClientAptitude } from "@/app/actions/career.actions";
 import { APTITUDE_CATEGORIES } from "@/lib/career-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const selectClass =
   "h-10 w-full rounded-xl border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -75,6 +76,11 @@ export function AptitudeTracker({ initialItems }: { initialItems: ClientAptitude
     setError(null);
     setOpen(true);
   }
+
+  useRegisterMobileFab({
+    label: "Add Aptitude Session",
+    onAction: openAdd,
+  });
 
   function save() {
     startTransition(async () => {

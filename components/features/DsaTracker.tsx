@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/layout/EmptyState";
 import { deleteDsaAction, upsertDsaAction, type ClientDsa } from "@/app/actions/career.actions";
 import { DSA_PLATFORMS, DSA_TOPICS } from "@/lib/career-constants";
 import { mutateWithOffline, putLocal, deleteLocal } from "@/lib/offline/mutate";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const DIFF_TONE = {
   Easy: "text-emerald-400 bg-emerald-500/10",
@@ -99,6 +100,11 @@ export function DsaTracker({ initialItems }: { initialItems: ClientDsa[] }) {
     setError(null);
     setOpen(true);
   }
+
+  useRegisterMobileFab({
+    label: "Add DSA Problem",
+    onAction: openAdd,
+  });
 
   function save() {
     startTransition(async () => {

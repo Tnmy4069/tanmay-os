@@ -39,6 +39,7 @@ import {
 import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
 import { useOnlineStatus } from "@/lib/offline/hooks";
 import { parseTimeToMinutes } from "@/utils/date";
+import { useRegisterMobileFab } from "@/lib/mobile-fab-context";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -166,6 +167,11 @@ export function RoutineEditor({ initialBlocks }: Props) {
     setError(null);
     setIsModalOpen(true);
   }
+
+  useRegisterMobileFab({
+    label: `Add Block to ${DAYS[selectedDay]}`,
+    onAction: openAdd,
+  });
 
   function openEdit(block: Block) {
     setForm({
