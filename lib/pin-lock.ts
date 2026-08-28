@@ -10,6 +10,7 @@ export type PinRecord = {
 
 const PIN_PREFIX = "tanmay-os-pin-v1:";
 const LOCK_PREFIX = "tanmay-os-pin-locked-v1:";
+const ENABLED_PREFIX = "tanmay-os-pin-enabled-v1:";
 const RESET_FLAG = "tanmay-os-pin-force-reset";
 const CHANNEL = "tanmay-os-pin-lock";
 
@@ -19,6 +20,26 @@ function pinKey(userId: string) {
 
 function lockKey(userId: string) {
   return `${LOCK_PREFIX}${userId}`;
+}
+
+function enabledKey(userId: string) {
+  return `${ENABLED_PREFIX}${userId}`;
+}
+
+export function isPinLockEnabled(userId: string): boolean {
+  if (typeof window === "undefined") return false;
+  const val = localStorage.getItem(enabledKey(userId));
+  if (val !== null) return val === "1";
+  return hasPinConfigured(userId);
+}
+
+export function setPinLockEnabled(userId: string, enabled: boolean) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(enabledKey(userId), enabled ? "1" : "0");
+  if (!enabled) {
+    localStorage.setItem(lockKey(userId), "0");
+  }
+  broadcastPinEvent({ type: enabled ? "unlocked" : "cleared", userId });
 }
 
 function bytesToHex(buf: ArrayBuffer) {
@@ -170,7 +191,12 @@ export function subscribePinEvents(userId: string, onChange: () => void) {
   }
   const onStorage = (e: StorageEvent) => {
     if (!e.key) return;
-    if (e.key === lockKey(userId) || e.key === pinKey(userId) || e.key.startsWith(`${CHANNEL}:`)) {
+    if (
+      e.key === lockKey(userId) ||
+      e.key === pinKey(userId) ||
+      e.key === enabledKey(userId) ||
+      e.key.startsWith(`${CHANNEL}:`)
+    ) {
       onChange();
     }
   };

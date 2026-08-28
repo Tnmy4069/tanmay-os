@@ -18,9 +18,11 @@ import {
   consumeForcePinReset,
   hasPinConfigured,
   isAppLocked,
+  isPinLockEnabled,
   peekForcePinReset,
   savePin,
   setAppLocked,
+  setPinLockEnabled,
   subscribePinEvents,
 } from "@/lib/pin-lock";
 import { PinLockScreen } from "@/components/pin/PinLockScreen";
@@ -33,6 +35,10 @@ type PinLockContextValue = {
   lockApp: () => void;
   unlockApp: () => void;
   isPinConfigured: boolean;
+  isPinEnabled: boolean;
+  setPinEnabled: (enabled: boolean) => void;
+  openPinSetup: () => void;
+  cancelPinSetup: () => void;
 };
 
 const PinLockContext = createContext<PinLockContextValue>({
@@ -40,6 +46,10 @@ const PinLockContext = createContext<PinLockContextValue>({
   lockApp: () => undefined,
   unlockApp: () => undefined,
   isPinConfigured: false,
+  isPinEnabled: false,
+  setPinEnabled: () => undefined,
+  openPinSetup: () => undefined,
+  cancelPinSetup: () => undefined,
 });
 
 export function usePinLock() {
@@ -59,17 +69,18 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
 
   const [phase, setPhase] = useState<PinPhase>("booting");
   const [configured, setConfigured] = useState(false);
+  const [enabled, setEnabled] = useState(false);
   const lastUserIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (userId) lastUserIdRef.current = userId;
   }, [userId]);
 
-  // Re-lock when the session ends (sign out) so next login asks for PIN
+  // Re-lock when the session ends (sign out) so next login asks for PIN if enabled
   useEffect(() => {
     if (status === "unauthenticated" && lastUserIdRef.current) {
       try {
-        if (hasPinConfigured(lastUserIdRef.current)) {
+        if (isPinLockEnabled(lastUserIdRef.current) && hasPinConfigured(lastUserIdRef.current)) {
           setAppLocked(lastUserIdRef.current, true);
         }
       } catch {
@@ -86,6 +97,7 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
     if (status !== "authenticated" || !userId || publicPath) {
       setPhase("idle");
       setConfigured(false);
+      setEnabled(false);
       return;
     }
 
@@ -94,16 +106,26 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
       clearPin(userId);
       consumeForcePinReset();
       setConfigured(false);
-      setPhase("setup");
+      setEnabled(false);
+      setPhase("unlocked");
       return;
     }
 
     const hasPin = hasPinConfigured(userId);
+    const lockEnabled = isPinLockEnabled(userId);
     setConfigured(hasPin);
+    setEnabled(lockEnabled);
+
+    if (!lockEnabled) {
+      setPhase("unlocked");
+      return;
+    }
+
     if (!hasPin) {
       setPhase("setup");
       return;
     }
+
     setPhase(isAppLocked(userId) ? "locked" : "unlocked");
   }, [status, userId, publicPath]);
 
@@ -117,7 +139,7 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
   }, [userId, publicPath, refreshPhase]);
 
   const lockApp = useCallback(() => {
-    if (!userId || !hasPinConfigured(userId)) return;
+    if (!userId || !isPinLockEnabled(userId) || !hasPinConfigured(userId)) return;
     setAppLocked(userId, true);
     setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
   }, [userId]);
@@ -128,27 +150,60 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
     setPhase("unlocked");
   }, [userId]);
 
-  // Always require PIN after cold start / PWA reopen (don't trust prior "unlocked" flag).
+  const openPinSetup = useCallback(() => {
+    setPhase("setup");
+  }, []);
+
+  const cancelPinSetup = useCallback(() => {
+    if (!userId) return;
+    setPhase("unlocked");
+    if (!hasPinConfigured(userId)) {
+      setPinLockEnabled(userId, false);
+      setEnabled(false);
+    }
+  }, [userId]);
+
+  const setPinEnabled = useCallback(
+    (nextEnabled: boolean) => {
+      if (!userId) return;
+      if (nextEnabled) {
+        if (hasPinConfigured(userId)) {
+          setPinLockEnabled(userId, true);
+          setEnabled(true);
+          setPhase("unlocked");
+        } else {
+          openPinSetup();
+        }
+      } else {
+        setPinLockEnabled(userId, false);
+        setEnabled(false);
+        unlockApp();
+      }
+    },
+    [userId, openPinSetup, unlockApp]
+  );
+
+  // Require PIN after cold start / PWA reopen only if screen lock is enabled
   useEffect(() => {
     if (!userId || publicPath) return;
-    if (!hasPinConfigured(userId)) return;
+    if (!isPinLockEnabled(userId) || !hasPinConfigured(userId)) return;
     setAppLocked(userId, true);
     setPhase((p) => (p === "setup" ? p : "locked"));
   }, [userId, publicPath]);
 
-  // Re-lock whenever the tab/PWA goes to background (tab switch, minimize, app switch).
+  // Re-lock whenever the tab/PWA goes to background if enabled
   useEffect(() => {
     if (!userId || publicPath) return;
 
     const lockIfConfigured = () => {
-      if (!hasPinConfigured(userId)) return;
+      if (!isPinLockEnabled(userId) || !hasPinConfigured(userId)) return;
       setAppLocked(userId, true);
       setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
     };
 
     const onVisibility = () => {
       if (document.visibilityState === "hidden") lockIfConfigured();
-      else if (document.visibilityState === "visible" && isAppLocked(userId)) {
+      else if (document.visibilityState === "visible" && isPinLockEnabled(userId) && isAppLocked(userId)) {
         setPhase((p) => (p === "setup" || p === "booting" ? p : "locked"));
       }
     };
@@ -176,7 +231,9 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
     async (pin: string) => {
       if (!userId) return;
       await savePin(userId, pin);
+      setPinLockEnabled(userId, true);
       setConfigured(true);
+      setEnabled(true);
       setPhase("unlocked");
     },
     [userId]
@@ -188,8 +245,12 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
       lockApp,
       unlockApp,
       isPinConfigured: configured,
+      isPinEnabled: enabled,
+      setPinEnabled,
+      openPinSetup,
+      cancelPinSetup,
     }),
-    [phase, lockApp, unlockApp, configured]
+    [phase, lockApp, unlockApp, configured, enabled, setPinEnabled, openPinSetup, cancelPinSetup]
   );
 
   // While locked/setup, keep shell mounted (sync continues) but inert for interaction
@@ -231,6 +292,7 @@ export function PinLockProvider({ children }: { children: ReactNode }) {
                 title="Set your PIN"
                 subtitle="Create a 4–10 digit PIN for this device. Unlock works offline — no login needed."
                 onComplete={onSetupComplete}
+                onCancel={cancelPinSetup}
               />
             )}
             {phase === "locked" && userId && (

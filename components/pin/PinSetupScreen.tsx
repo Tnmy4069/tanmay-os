@@ -18,10 +18,12 @@ type Step = "create" | "confirm";
  */
 export function PinSetupScreen({
   onComplete,
+  onCancel,
   title = "Set your PIN",
   subtitle = "Choose 4–10 digits. You’ll enter it twice to confirm.",
 }: {
   onComplete: (pin: string) => Promise<void> | void;
+  onCancel?: () => void;
   title?: string;
   subtitle?: string;
 }) {
@@ -253,6 +255,18 @@ export function PinSetupScreen({
           >
             Start over
           </button>
+        )}
+
+        {onCancel && (
+          <div>
+            <button
+              type="button"
+              className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors pt-2"
+              onClick={onCancel}
+            >
+              Cancel & keep screen lock off
+            </button>
+          </div>
         )}
       </motion.div>
     </div>
