@@ -125,7 +125,12 @@ export function NotificationSettings() {
           {
             key: "morningReminder" as const,
             label: "Morning quest",
-            hint: `Around ${prefs.morningHour}:00`,
+            hint: `Around ${prefs.morningHour}:00 · Open Today view`,
+          },
+          {
+            key: "eveningReminder" as const,
+            label: "Evening daily check-in",
+            hint: `Around ${prefs.eveningHour}:00 · Open Checklist view`,
           },
           {
             key: "taskNotifyDates" as const,
@@ -135,7 +140,7 @@ export function NotificationSettings() {
           {
             key: "overdueAlert" as const,
             label: "Overdue alert",
-            hint: "Once a day if anything slipped",
+            hint: "Once a day if anything slipped · Open Tasks",
           },
         ] as const
       ).map((row) => (

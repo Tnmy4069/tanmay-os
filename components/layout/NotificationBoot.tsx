@@ -17,14 +17,42 @@ export function NotificationBoot() {
   const router = useRouter();
 
   useEffect(() => {
+    function handleNav(url: string) {
+      if (url && typeof url === "string") {
+        router.push(url);
+      }
+    }
+
     function onMessage(event: MessageEvent) {
       const data = event.data;
       if (data?.type === "NOTIFICATION_NAV" && typeof data.url === "string") {
-        router.push(data.url);
+        handleNav(data.url);
       }
     }
+
     navigator.serviceWorker?.addEventListener("message", onMessage);
-    return () => navigator.serviceWorker?.removeEventListener("message", onMessage);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("tanmay-os-notification");
+      bc.onmessage = (event) => {
+        const data = event.data;
+        if (data?.type === "NOTIFICATION_NAV" && typeof data.url === "string") {
+          handleNav(data.url);
+        }
+      };
+    } catch {
+      // ignore
+    }
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener("message", onMessage);
+      try {
+        bc?.close();
+      } catch {
+        // ignore
+      }
+    };
   }, [router]);
 
   useEffect(() => {

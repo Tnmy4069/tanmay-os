@@ -7,6 +7,8 @@ export type NotifyPrefs = {
   enabled: boolean;
   morningReminder: boolean;
   morningHour: number; // 0-23 IST-ish via local clock
+  eveningReminder: boolean;
+  eveningHour: number; // 0-23 IST-ish (e.g. 21)
   taskNotifyDates: boolean;
   overdueAlert: boolean;
 };
@@ -15,6 +17,8 @@ export const defaultNotifyPrefs: NotifyPrefs = {
   enabled: false,
   morningReminder: true,
   morningHour: 8,
+  eveningReminder: true,
+  eveningHour: 21,
   taskNotifyDates: true,
   overdueAlert: true,
 };
@@ -74,23 +78,30 @@ export async function showAppNotification(opts: {
   body: string;
   tag?: string;
   url?: string;
+  icon?: string;
+  badge?: string;
 }) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
 
   const tag = opts.tag || `tanmay-${Date.now()}`;
-  const data = { url: opts.url || "/today" };
+  const targetUrl = opts.url || "/today";
+  const iconUrl = opts.icon || "/icon-192.png";
+  const badgeUrl = opts.badge || "/icon.png";
+
+  const options = {
+    body: opts.body,
+    tag,
+    data: { url: targetUrl },
+    icon: iconUrl,
+    badge: badgeUrl,
+    vibrate: [100, 50, 100],
+  };
 
   try {
     const reg = await navigator.serviceWorker?.ready;
     if (reg?.showNotification) {
-      await reg.showNotification(opts.title, {
-        body: opts.body,
-        tag,
-        data,
-        icon: "/pwa-icon/192",
-        badge: "/pwa-icon/192",
-      });
+      await reg.showNotification(opts.title, options as any);
       return;
     }
   } catch {
@@ -98,12 +109,24 @@ export async function showAppNotification(opts: {
   }
 
   // Fallback when SW not ready
-  const n = new Notification(opts.title, { body: opts.body, tag, data: data as any, icon: "/pwa-icon/192" });
-  n.onclick = () => {
-    window.focus();
-    if (opts.url) window.location.href = opts.url;
-    n.close();
-  };
+  try {
+    const n = new Notification(opts.title, {
+      body: opts.body,
+      tag,
+      data: { url: targetUrl },
+      icon: iconUrl,
+      badge: badgeUrl,
+    });
+    n.onclick = () => {
+      window.focus();
+      if (targetUrl) {
+        window.location.href = targetUrl;
+      }
+      n.close();
+    };
+  } catch {
+    // ignore
+  }
 }
 
 export type ReminderTask = {
@@ -138,10 +161,11 @@ export async function runNotificationSweep(tasks: ReminderTask[]) {
   const today = todayKeyLocal();
   const open = tasks.filter((t) => t.status !== "Done" && t.status !== "Cancelled");
 
+  // 1. Morning Quest Nudge (around morningHour) -> Navigates to /today
   if (prefs.morningReminder) {
     const hour = new Date().getHours();
     const tag = `morning-${today}`;
-    if (hour >= prefs.morningHour && hour < prefs.morningHour + 2 && !alreadySent(tag)) {
+    if (hour >= prefs.morningHour && hour < prefs.morningHour + 3 && !alreadySent(tag)) {
       const dueToday = open.filter((t) => {
         const end = t.endDate || t.dueDate;
         return isSameIstDay(end, today) || isSameIstDay(t.notifyDate, today);
@@ -151,7 +175,7 @@ export async function runNotificationSweep(tasks: ReminderTask[]) {
         body:
           dueToday > 0
             ? `You have ${dueToday} task${dueToday === 1 ? "" : "s"} on today's quest.`
-            : "Open Tanmay OS and keep your streak alive.",
+            : "Open Tanmay OS and keep your daily streak alive.",
         tag,
         url: "/today",
       });
@@ -159,13 +183,29 @@ export async function runNotificationSweep(tasks: ReminderTask[]) {
     }
   }
 
+  // 2. Evening Daily Check-in Nudge (around eveningHour) -> Navigates to /personal/checklist
+  if (prefs.eveningReminder) {
+    const hour = new Date().getHours();
+    const tag = `evening-checklist-${today}`;
+    if (hour >= prefs.eveningHour && hour < prefs.eveningHour + 3 && !alreadySent(tag)) {
+      await showAppNotification({
+        title: "Daily Check-in 🌙",
+        body: "Review today's routine blocks and save your daily check-in.",
+        tag,
+        url: "/personal/checklist",
+      });
+      markSent(tag);
+    }
+  }
+
+  // 3. Task Notify Date Reminders -> Navigates to /today or /tasks
   if (prefs.taskNotifyDates) {
     for (const t of open) {
       if (!isSameIstDay(t.notifyDate, today)) continue;
       const tag = `notify-${t._id}-${today}`;
       if (alreadySent(tag)) continue;
       await showAppNotification({
-        title: "Reminder",
+        title: "Task Reminder ⚡",
         body: t.title,
         tag,
         url: "/today",
@@ -174,19 +214,20 @@ export async function runNotificationSweep(tasks: ReminderTask[]) {
     }
   }
 
+  // 4. Overdue Tasks Alert -> Navigates to /tasks
   if (prefs.overdueAlert) {
     const overdue = open.filter((t) => isBeforeToday(t.endDate || t.dueDate, today));
     if (overdue.length > 0) {
       const tag = `overdue-${today}`;
       if (!alreadySent(tag)) {
         await showAppNotification({
-          title: `${overdue.length} overdue task${overdue.length === 1 ? "" : "s"}`,
+          title: `${overdue.length} overdue task${overdue.length === 1 ? "" : "s"} ⚠️`,
           body: overdue
             .slice(0, 3)
             .map((t) => t.title)
             .join(" · "),
           tag,
-          url: "/today",
+          url: "/tasks",
         });
         markSent(tag);
       }

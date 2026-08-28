@@ -49,19 +49,18 @@ self.addEventListener("notificationclick", (event) => {
       for (const client of clientList) {
         if (client.url.startsWith(self.location.origin) && "focus" in client) {
           await client.focus();
-          if ("navigate" in client && typeof client.navigate === "function") {
-            try {
-              await client.navigate(url);
-              return;
-            } catch {
-              // fall through
-            }
-          }
           client.postMessage({ type: "NOTIFICATION_NAV", url: path });
+          try {
+            const bc = new BroadcastChannel("tanmay-os-notification");
+            bc.postMessage({ type: "NOTIFICATION_NAV", url: path });
+            bc.close();
+          } catch (e) {}
           return;
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url);
+      }
     })
   );
 });
