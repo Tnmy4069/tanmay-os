@@ -13,9 +13,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   User,
+  Sun,
+  Moon,
+  Clock,
+  Laptop,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useTheme, type ThemeMode } from "@/components/layout/ThemeProvider";
 import { LogoutButton } from "@/components/features/LogoutButton";
 import { usePinLock } from "@/components/pin/PinLockProvider";
 import { PinChangePanel } from "@/components/pin/PinChangePanel";
@@ -27,6 +32,13 @@ const TABS: { id: TabId; label: string; icon: typeof Bell }[] = [
   { id: "categories", label: "Spaces", icon: Layers },
   { id: "account", label: "Account", icon: User },
   { id: "data", label: "Data", icon: Database },
+];
+
+const THEME_OPTIONS: { id: ThemeMode; label: string; sub: string; icon: typeof Sun }[] = [
+  { id: "auto", label: "Auto (Time-based)", sub: "Daytime Light · Nighttime Dark", icon: Clock },
+  { id: "light", label: "Light", sub: "Always bright & energetic", icon: Sun },
+  { id: "dark", label: "Dark", sub: "Always sleek dark mode", icon: Moon },
+  { id: "system", label: "System", sub: "Follow OS appearance", icon: Laptop },
 ];
 
 export function SettingsShell({
@@ -41,6 +53,7 @@ export function SettingsShell({
   const [tab, setTab] = useState<TabId>("reminders");
   const [changePinOpen, setChangePinOpen] = useState(false);
   const { lockApp, isPinConfigured, isPinEnabled, setPinEnabled } = usePinLock();
+  const { mode, theme: resolvedTheme, setMode } = useTheme();
 
   return (
     <div className="space-y-5">
@@ -104,12 +117,61 @@ export function SettingsShell({
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-3xl bg-secondary/80 px-4 py-3.5">
-            <div>
-              <p className="text-sm font-extrabold">Appearance</p>
-              <p className="text-xs font-semibold text-muted-foreground">Light or dark</p>
+          {/* Appearance / Theme Selector */}
+          <div className="rounded-3xl bg-secondary/80 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-extrabold">Appearance & Theme</p>
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {mode === "auto"
+                    ? `Auto Time-based · Currently ${resolvedTheme === "dark" ? "🌙 Dark (Nighttime)" : "☀️ Light (Daytime)"}`
+                    : `Active mode: ${mode.toUpperCase()}`}
+                </p>
+              </div>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+                {resolvedTheme === "dark" ? "🌙 Dark" : "☀️ Light"}
+              </span>
             </div>
-            <ThemeToggle />
+
+            <div className="grid grid-cols-2 gap-2">
+              {THEME_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const selected = mode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setMode(opt.id)}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-2xl border-2 text-left transition-all active:scale-[0.98]",
+                      selected
+                        ? "border-primary bg-primary/10 shadow-xs"
+                        : "border-border/60 bg-card hover:bg-muted/60"
+                    )}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div
+                        className={cn(
+                          "w-7 h-7 rounded-xl flex items-center justify-center",
+                          selected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      {selected && (
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-xs font-extrabold text-foreground mt-1">{opt.label}</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground leading-tight">
+                      {opt.sub}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Screen Lock Toggle Card */}
