@@ -24,6 +24,7 @@ import { useTheme, type ThemeMode } from "@/components/layout/ThemeProvider";
 import { LogoutButton } from "@/components/features/LogoutButton";
 import { usePinLock } from "@/components/pin/PinLockProvider";
 import { PinChangePanel } from "@/components/pin/PinChangePanel";
+import { PwaInstallButton } from "@/components/features/PwaInstallButton";
 
 type TabId = "reminders" | "categories" | "account" | "data";
 
@@ -260,6 +261,9 @@ export function SettingsShell({
               </div>
             )}
           </div>
+
+          {/* PWA Install / Reinstall */}
+          <PwaInstallButton />
 
           <div className="flex items-center justify-between gap-3 rounded-3xl bg-destructive/10 px-4 py-3.5">
             <div className="min-w-0">
