@@ -8,11 +8,13 @@ import { parseTimeToMinutes, formatIST, getDayOfWeekIST, getStartOfTodayIST, get
 import { formatInTimeZone } from "date-fns-tz";
 import { StatRow } from "@/components/layout/StatRow";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckSquare } from "lucide-react";
+import { ArrowRight, CheckSquare, TrendingUp, TrendingDown, Wallet, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { taskDeadline } from "@/lib/task-dates";
 import { GameHUD } from "@/components/features/GameHUD";
 import { computeGameStats } from "@/lib/gamification";
+import { getFinanceSnapshot } from "@/app/actions/finance.actions";
+import { formatCurrency } from "@/lib/finance-constants";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -28,6 +30,8 @@ export default async function DashboardPage() {
     getTasks(userId, { status: { $ne: "Done" } }),
     getTasks(userId, { status: "Done" }),
   ]);
+
+  const financeSnapshot = await getFinanceSnapshot().catch(() => null);
 
   const gameStats = computeGameStats({
     allTasks: [...allTasks, ...doneTasks],
@@ -294,7 +298,60 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        <Card className="h-fit lg:sticky lg:top-6 overflow-hidden">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Finance snapshot */}
+          {financeSnapshot && (
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    Finance
+                  </CardTitle>
+                  <Link href="/finance" className="text-xs font-extrabold text-primary hover:underline flex items-center gap-1">
+                    Open <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl bg-[color:var(--success)]/12 p-3">
+                    <p className="stat-label mb-1">Income</p>
+                    <p className="text-base font-black text-[color:var(--success)] tabular-nums">
+                      {formatCurrency(financeSnapshot.totalIncome, { compact: true })}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-destructive/10 p-3">
+                    <p className="stat-label mb-1">Expenses</p>
+                    <p className="text-base font-black text-destructive tabular-nums">
+                      {formatCurrency(financeSnapshot.totalExpense, { compact: true })}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between rounded-2xl bg-secondary/60 px-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    {financeSnapshot.netFlow >= 0
+                      ? <TrendingUp className="h-4 w-4 text-primary" />
+                      : <TrendingDown className="h-4 w-4 text-destructive" />}
+                    <span className="text-sm font-extrabold">
+                      Net: {financeSnapshot.netFlow >= 0 ? "+" : ""}{formatCurrency(financeSnapshot.netFlow, { compact: true })}
+                    </span>
+                  </div>
+                  {financeSnapshot.overBudgetCount > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-extrabold text-destructive">
+                      <AlertTriangle className="h-3 w-3" />
+                      {financeSnapshot.overBudgetCount} over budget
+                    </span>
+                  )}
+                  {financeSnapshot.overBudgetCount === 0 && financeSnapshot.totalExpense > 0 && (
+                    <span className="text-xs font-extrabold text-[color:var(--success)]">✓ On budget</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="h-fit lg:sticky lg:top-6 overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">Today&apos;s routine</CardTitle>
           </CardHeader>
@@ -340,7 +397,8 @@ export default async function DashboardPage() {
               </>
             )}
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

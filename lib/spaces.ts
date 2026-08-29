@@ -110,6 +110,21 @@ export function defaultCores(): SpaceCore[] {
         { id: "per-checklist", slug: "checklist", name: "Checklist", icon: "CalendarCheck2", href: "/personal/checklist", builtIn: true, hidden: false, order: 2 },
       ],
     },
+    {
+      id: "core-finance",
+      slug: "finance",
+      name: "Finance",
+      icon: "Wallet",
+      builtIn: true,
+      hidden: false,
+      order: 4,
+      items: [
+        { id: "fin-overview", slug: "overview", name: "Overview", icon: "LayoutDashboard", href: "/finance", builtIn: true, hidden: false, order: 0 },
+        { id: "fin-transactions", slug: "transactions", name: "Transactions", icon: "Receipt", href: "/finance/transactions", builtIn: true, hidden: false, order: 1 },
+        { id: "fin-budgets", slug: "budgets", name: "Budgets", icon: "Target", href: "/finance/budgets", builtIn: true, hidden: false, order: 2 },
+        { id: "fin-goals", slug: "goals", name: "Goals", icon: "PiggyBank", href: "/finance/goals", builtIn: true, hidden: false, order: 3 },
+      ],
+    },
   ];
 }
 
