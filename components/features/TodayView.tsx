@@ -254,7 +254,7 @@ export function TodayView({
         <div className="rounded-2xl border-2 border-[color:var(--streak)]/40 bg-[color:var(--streak)]/10 px-3 py-3 shadow-[var(--shadow-sm)] sm:px-4">
           <h3 className="mb-2 text-sm font-extrabold text-[color:var(--streak)]">{overdueTasks.length} overdue</h3>
           <ul className="space-y-2">
-            {overdueTasks.slice(0, 4).map((task) => (
+            {overdueTasks.map((task) => (
               <TaskItem key={String(task._id)} task={task} />
             ))}
           </ul>

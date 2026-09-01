@@ -193,6 +193,32 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
+          {overdueTasks.filter((t) => !t.isMustDo).length > 0 && (
+            <Card className="border-[color:var(--streak)]/40 bg-[color:var(--streak)]/5">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base sm:text-lg text-[color:var(--streak)] flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Overdue
+                    </CardTitle>
+                    <CardDescription className="hidden sm:block">
+                      Tasks past their deadline. Stay here until completed.
+                    </CardDescription>
+                  </div>
+                  <Badge variant="destructive">{overdueTasks.filter((t) => !t.isMustDo).length}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {overdueTasks.filter((t) => !t.isMustDo).map((task) => (
+                    <TaskItem key={String(task._id)} task={task} />
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           {dueTodayTasks.length > 0 && (
             <Card>
               <CardHeader className="pb-3">

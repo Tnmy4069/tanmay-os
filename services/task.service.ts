@@ -18,9 +18,11 @@ export async function getTodayMustDoTasks(userId: string): Promise<ClientTask[]>
     userId,
     isMustDo: true,
     $or: [
+      { status: { $ne: "Done" } },
       { endDate: { $gte: startOfDay, $lte: endOfDay } },
       { dueDate: { $gte: startOfDay, $lte: endOfDay } },
-      { $and: [{ endDate: { $exists: false } }, { dueDate: { $exists: false } }] },
+      { completedAt: { $gte: startOfDay, $lte: endOfDay } },
+      { updatedAt: { $gte: startOfDay, $lte: endOfDay } },
     ],
   }).lean();
 
