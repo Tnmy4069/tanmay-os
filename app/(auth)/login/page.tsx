@@ -14,7 +14,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const pinReset = searchParams.get("pinReset") === "1";
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,12 +26,13 @@ function LoginForm() {
     try {
       const res = await signIn("credentials", {
         email,
-        password,
+        password: pin,
         redirect: false,
       });
 
       if (res?.error) {
         setError("Invalid email or password");
+        setLoading(false);
       } else {
         if (pinReset) markForcePinReset();
         router.push("/dashboard");
@@ -39,7 +40,6 @@ function LoginForm() {
       }
     } catch {
       setError("An error occurred. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -70,15 +70,19 @@ function LoginForm() {
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-extrabold" htmlFor="password">
-            Password
+          <label className="text-sm font-extrabold" htmlFor="pin">
+            PIN (4-6 digits)
           </label>
           <Input
-            id="password"
+            id="pin"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            inputMode="numeric"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
             required
+            minLength={4}
+            maxLength={6}
+            pattern="[0-9]*"
           />
         </div>
         {error && <p className="text-sm font-extrabold text-destructive">{error}</p>}

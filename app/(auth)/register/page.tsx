@@ -11,7 +11,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
+  const [geminiKey, setGeminiKey] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, pin, geminiKey }),
       });
 
       if (!res.ok) {
@@ -35,7 +36,6 @@ export default function RegisterPage() {
       router.push("/login?registered=true");
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -60,8 +60,12 @@ export default function RegisterPage() {
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-extrabold" htmlFor="password">Password</label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <label className="text-sm font-extrabold" htmlFor="pin">PIN (4-6 digits)</label>
+            <Input id="pin" type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} required minLength={4} maxLength={6} pattern="[0-9]*" placeholder="e.g. 1234" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-extrabold" htmlFor="geminiKey">Gemini API Key (Optional)</label>
+            <Input id="geminiKey" type="password" value={geminiKey} onChange={(e) => setGeminiKey(e.target.value)} placeholder="AI Routine Builder" />
           </div>
           {error && <p className="text-sm font-extrabold text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>

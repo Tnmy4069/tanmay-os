@@ -5,10 +5,10 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, pin, geminiKey } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    if (!email || !pin) {
+      return NextResponse.json({ error: "Email and PIN are required" }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -18,8 +18,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email is already registered" }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(pin, 10);
+    await User.create({ name, email, password: hashedPassword, geminiKey });
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
   } catch (error) {

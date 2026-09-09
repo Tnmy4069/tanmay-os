@@ -35,6 +35,7 @@ import {
   createScheduleBlockAction,
   updateScheduleBlockAction,
   deleteScheduleBlockAction,
+  generateRoutineFromTextAction,
 } from "@/app/actions/schedule.actions";
 import { mutateWithOffline, putLocal, deleteLocal, getLocalAll } from "@/lib/offline/mutate";
 import { useOnlineStatus } from "@/lib/offline/hooks";
@@ -130,6 +131,13 @@ export function RoutineEditor({ initialBlocks }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  
+  // AI State
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isAiPending, startAiTransition] = useTransition();
+  
   const online = useOnlineStatus();
 
   useEffect(() => {
@@ -266,6 +274,20 @@ export function RoutineEditor({ initialBlocks }: Props) {
     });
   }
 
+  function handleAiSubmit() {
+    if (!aiPrompt.trim()) return;
+    setAiError(null);
+    startAiTransition(async () => {
+      const res = await generateRoutineFromTextAction(aiPrompt, selectedDay);
+      if (!res.success) {
+        setAiError(res.message as string);
+        return;
+      }
+      // AI success, reload the page to fetch the new schedule
+      window.location.reload();
+    });
+  }
+
   const liveDuration = calculateDuration(form.startTime, form.endTime);
   const selectedTypeConfig = BLOCK_TYPES.find((t) => t.id === form.type) || BLOCK_TYPES[0];
 
@@ -334,13 +356,23 @@ export function RoutineEditor({ initialBlocks }: Props) {
           </div>
         </div>
 
-        <Button
-          onClick={openAdd}
-          className="rounded-xl shadow-sm hover:shadow-md transition-all gap-2 font-semibold"
-        >
-          <Plus className="w-4 h-4" />
-          Add Block
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsAiModalOpen(true)}
+            variant="outline"
+            className="rounded-xl shadow-sm hover:shadow-md transition-all gap-2 font-semibold text-primary border-primary/20 hover:bg-primary/5"
+          >
+            <Sparkles className="w-4 h-4" />
+            AI Magic
+          </Button>
+          <Button
+            onClick={openAdd}
+            className="rounded-xl shadow-sm hover:shadow-md transition-all gap-2 font-semibold"
+          >
+            <Plus className="w-4 h-4" />
+            Add Block
+          </Button>
+        </div>
       </div>
 
       {/* Block list */}
@@ -755,6 +787,82 @@ export function RoutineEditor({ initialBlocks }: Props) {
                 )}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI MAGIC MODAL */}
+      <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl sm:rounded-3xl border-2 p-0 overflow-hidden shadow-2xl gap-0">
+          <div className="shrink-0 px-4 py-4 sm:px-6 sm:py-5 border-b bg-primary/5">
+            <DialogHeader className="text-left space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-bold">AI Routine Builder</DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    Describe your day naturally, and AI will create blocks for {DAYS[selectedDay]}.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="p-4 sm:p-6 space-y-4">
+            {aiError && (
+              <div className="flex items-start gap-2.5 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold rounded-xl animate-in fade-in">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{aiError}</span>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Describe your day
+              </label>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="e.g., I wake up at 7am, work out for an hour. Commute at 8:30. Work from 9 to 5 with a break at 1pm. Then DSA prep from 8pm to 10pm."
+                className="w-full h-32 p-3 text-sm rounded-xl border-2 border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none bg-background"
+                autoFocus
+              />
+              <p className="text-[11px] text-muted-foreground">
+                <span className="font-semibold text-primary">Warning:</span> Generating with AI will overwrite any existing blocks for this day.
+              </p>
+            </div>
+          </div>
+
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-t bg-muted/20 flex justify-end gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAiModalOpen(false)}
+              disabled={isAiPending}
+              className="rounded-xl text-xs h-9"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAiSubmit}
+              disabled={isAiPending || !aiPrompt.trim()}
+              className="rounded-xl font-bold text-xs h-9 min-w-[130px]"
+            >
+              {isAiPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                  Generate Blocks
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

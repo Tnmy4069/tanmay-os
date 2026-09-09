@@ -4,6 +4,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   name?: string;
+  geminiKey?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,10 @@ const UserSchema: Schema = new Schema(
       required: false, // Optional for magic link/OAuth if added later
     },
     name: {
+      type: String,
+      required: false,
+    },
+    geminiKey: {
       type: String,
       required: false,
     },
